@@ -7,21 +7,21 @@
             <span>创建新钱包</span>
         </p>
         <div style="text-align:center">
-            <Input v-model="user_entropy" placeholder="Type random text to generate entropy" style="width: 100%"></Input>
+            <i-input v-model="user_entropy" placeholder="Type random text to generate entropy" style="width: 100%"></i-input>
         </div>
         <div slot="footer" style="text-align:center;">
-            <Button class="button" @click="proceedCreateToPassword">创建</Button>
-            <Button class="button" @click="closeModal()">关闭</Button>
+            <i-button class="button" @click="proceedCreateToPassword">创建</i-button>
+            <i-button class="button" @click="closeModal()">关闭</i-button>
         </div>
       </Modal>
       <Modal v-model="modal.password_create" width="360" :closable="false" :mask-closable="false">
         <div style="text-align:center">
             <p style="text-align:left">Your new wallet seed is: "<span class="danger" v-text="seed"></span>". Please write it down on paper or in a password manager, you will need it to access your wallet. Do not let anyone see this seed or they can take your Ether. Please enter a password to encrypt your seed while in the browser.</p>
-            <Input type="password" v-model="user_password" placeholder="Type your password" style="width: 100%"></Input>
+            <i-input type="password" v-model="user_password" placeholder="Type your password" style="width: 100%"></i-input>
         </div>
         <div slot="footer" style="text-align:center;">
-            <Button class="button" :loading="modal_loading" @click="createWallet">确定</Button>
-            <Button class="button" @click="closeModal('password_create')">关闭</Button>
+            <i-button class="button" :loading="modal_loading" @click="createWallet">确定</i-button>
+            <i-button class="button" @click="closeModal('password_create')">关闭</i-button>
         </div>
       </Modal>
       <Modal v-model="modal.restore_wallet" width="360" :closable="false" :mask-closable="false">
@@ -29,11 +29,11 @@
             <span>seed</span>
         </p>
         <div style="text-align:center">
-            <Input v-model="seed" placeholder="Type your wallet seed" style="width: 100%"></Input>
+            <i-input v-model="seed" placeholder="Type your wallet seed" style="width: 100%"></i-input>
         </div>
         <div slot="footer" style="text-align:center;">
-            <Button class="button" @click="proceedStoreToPassword">确定</Button>
-            <Button class="button" @click="closeModal()">关闭</Button>
+            <i-button class="button" @click="proceedStoreToPassword">确定</i-button>
+            <i-button class="button" @click="closeModal()">关闭</i-button>
         </div>
       </Modal>
       <Modal v-model="modal.password_restore" width="360" :closable="false" :mask-closable="false">
@@ -41,11 +41,11 @@
             <span>输入密码</span>
         </p>
         <div style="text-align:center">
-            <Input type="password" v-model="user_password" placeholder="Type your password" style="width: 100%"></Input>
+            <i-input type="password" v-model="user_password" placeholder="Type your password" style="width: 100%"></i-input>
         </div>
         <div slot="footer" style="text-align:center;">
-            <Button class="button" :loading="modal_loading" @click="restoreWallet">确定</Button>
-            <Button class="button" @click="closeModal()">关闭</Button>
+            <i-button class="button" :loading="modal_loading" @click="restoreWallet">确定</i-button>
+            <i-button class="button" @click="closeModal()">关闭</i-button>
         </div>
       </Modal>
       <Modal v-model="modal.seed_export" width="360" :closable="false" :mask-closable="false">
@@ -56,7 +56,7 @@
           <p class="seed-export">{{seed}}</p>    
         </div>
         <div slot="footer" style="text-align:center;">
-            <Button class="button" @click="closeModal()">关闭</Button>
+            <i-button class="button" @click="closeModal()">关闭</i-button>
         </div>
       </Modal>
       <Modal v-model="modal.password_export" width="360" :closable="false" :mask-closable="false">
@@ -64,15 +64,15 @@
             <span>输入密码</span>
         </p>
         <div style="text-align:center">
-            <Input type="password" v-model="user_password" placeholder="Type your password" style="width: 100%"></Input>
+            <i-input type="password" v-model="user_password" placeholder="Type your password" style="width: 100%"></i-input>
         </div>
         <div slot="footer" style="text-align:center;">
-            <Button class="button" :loading="modal_loading" @click="exportWallet">确定</Button>
-            <Button class="button" @click="closeModal()">关闭</Button>
+            <i-button class="button" :loading="modal_loading" @click="exportWallet">确定</i-button>
+            <i-button class="button" @click="closeModal()">关闭</i-button>
         </div>
       </Modal>
-      <Button class="button" @click="openModal('restore_wallet')">恢复钱包</Button>
-      <Button class="button">帮助</Button>
+      <i-button class="button" @click="openModal('restore_wallet')">恢复钱包</i-button>
+      <i-button class="button">帮助</i-button>
     </div>
     <div class="filter-wrapper">
     </div>
@@ -124,7 +124,9 @@ export default {
       modalname ? (modal_map[modalname] = false) : (modal_map = {});
       this.modal = modal_map;
       this.modal_loading = false;
-      this.user_entropy = this.user_password = this.seed = null;
+      this.user_entropy = "";
+      this.user_password = "";
+      this.seed = "";
     },
     newAddresses(password, keystore) {
       let _this = this,
@@ -135,8 +137,10 @@ export default {
           return;
         }
         keystore.generateNewAddress(pwDerivedKey, 1);
-        _this.updateWallet(keystore.getAddresses()[0], keystore);
-        web3Utils.setWebProvider(keystore);
+        _.each(keystore.getAddresses(), address => {
+
+          _this.updateWallet(address, password, keystore);
+        })
       });
     },
     proceedCreateToPassword() {
@@ -174,6 +178,7 @@ export default {
           }
           try {
             _this.newAddresses(password, ks);
+            web3Utils.setWebProvider(ks);  
           } catch (err) {
             reportUtils.report(err);
             _this.$Message.error("创建失败");
@@ -211,6 +216,7 @@ export default {
             }
             try {
               _this.newAddresses(password, ks);
+              web3Utils.setWebProvider(ks);  
             } catch (e) {
               reportUtils.report(e);
               _this.$Message.error("恢复失败");
@@ -224,10 +230,13 @@ export default {
         _this.closeModal();
       }
     },
-    updateWallet(address, keystore) {
+    updateWallet(address, password, keystore) {
       let wallet = _.find(this.wallet_list, ["address", address]);
       if (wallet) {
-        wallet.keystore = keystore;
+        lightwallet.keystore.upgradeOldSerialized(wallet.keystore, password, function(keystore){
+          wallet.keystore = keystore;
+        })
+        
       } else {
         this.wallet_list.push({
           address: address,

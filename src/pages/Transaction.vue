@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="btn-wrapper">
-      <Button class="button" :class="{'active':method=='transfer'}" @click="changMethod('transfer')">转账</Button>
-      <Button class="button" :class="{'active':method=='receive'}" @click="changMethod('receive')">收入</Button>
+      <i-button class="button" :class="{'active':method=='transfer'}" @click="changMethod('transfer')">转账</i-button>
+      <i-button class="button" :class="{'active':method=='receive'}" @click="changMethod('receive')">收入</i-button>
     </div>
     <div class="filter-wrapper">
     </div>
@@ -47,9 +47,21 @@
       <div class="result-wrapper">
         <div class="form-item">
           共计<span class="transfer-amount" v-text="transfer_token"  v-if="token"></span><span class="token"  v-text="token"></span>
-          <Button class="button ready-to-transfer" size="large" @click="transfer">确定</Button>
+          <i-button class="button ready-to-transfer" size="large" @click="openModal('password_transaction')">确定</i-button>
         </div>
       </div>
+      <Modal v-model="modal.password_transaction" width="360" :closable="false" :mask-closable="false">
+        <p slot="header" style="text-align:center">
+            <span>输入密码</span>
+        </p>
+        <div style="text-align:center">
+            <i-input type="password" v-model="user_password" placeholder="Type your password" style="width: 100%"></i-input>
+        </div>
+        <div slot="footer" style="text-align:center;">
+            <i-button class="button" @click="transfer" :loading="modal_loading" >确定</i-button>
+            <i-button class="button" @click="closeModal()">关闭</i-button>
+        </div>
+      </Modal>
     </div>
   </div>
 </template>
@@ -60,7 +72,7 @@ import async from "async";
 import BigNumber from "bignumber.js";
 import reportUtils from "../reportUtils";
 import web3Utils from "../web3Utils";
-import kjua from 'kjua'
+import kjua from "kjua";
 
 export default {
   data() {
@@ -72,7 +84,11 @@ export default {
       wallet_list: [],
       current_wallet: {},
       target_address: "",
-      qrcode:""
+      qrcode: "",
+      password: "",
+      modal:{
+        password_transaction:false
+      }
     };
   },
   computed: {
@@ -101,13 +117,24 @@ export default {
     }
   },
   methods: {
-    generateQRCode(text){
-      let img_path = './assets/logo.png',
-          _qrcode = document.querySelector("#qrcode");
-      _qrcode.innerHTML = '';
-      _qrcode.appendChild(kjua({text:text}));
+    openModal(modalname) {
+      this.modal = {};
+      this.modal[modalname] = true;
     },
-    changeReceiveWallet(address){
+    closeModal(modalname) {
+      let modal_map = JSON.parse(JSON.stringify(this.modal));
+      modalname ? (modal_map[modalname] = false) : (modal_map = {});
+      this.modal = modal_map;
+      this.modal_loading = false;
+      this.user_password = "";
+    },
+    generateQRCode(text) {
+      let img_path = "./assets/logo.png",
+        _qrcode = document.querySelector("#qrcode");
+      _qrcode.innerHTML = "";
+      _qrcode.appendChild(kjua({ text: text }));
+    },
+    changeReceiveWallet(address) {
       let _this = this,
         current_wallet = _.cloneDeep(
           _.find(this.$root.globalData.wallet_list, ["address", address])
@@ -122,12 +149,17 @@ export default {
           _.find(this.$root.globalData.wallet_list, ["address", address])
         );
       this.$Loading.start();
+
+      current_wallet.keystore.passwordProvider = function(callback) {
+        callback(null,_this.user_password);
+      };
+
       web3Utils.setWebProvider(current_wallet.keystore);
       this.current_wallet = current_wallet;
-      this.updateBalance(this.current_wallet);
+      this.getBalances(this.current_wallet);
       this.$Loading.finish();
     },
-    updateBalance(wallet, resolve, reject) {
+    getBalances(wallet, resolve, reject) {
       var _this = this,
         web3 = web3Utils.getWeb3(),
         erc20tokens = web3Utils.getErc20Tokens(),
@@ -165,33 +197,37 @@ export default {
     },
     transfer() {
       var _this = this,
-          text = [];
-      if(!this.current_wallet || !this.current_wallet.address){
-        text.push("未选择钱包")
+        text = [];
+      if (!this.current_wallet || !this.current_wallet.address) {
+        text.push("未选择钱包");
       }
-      if(!this.target_address){
-        text.push("未填写转入地址")
+      if (!this.target_address) {
+        text.push("未填写转入地址");
       }
       if(!this.transfer_token){
-        text.push("转入数量不可为0")
+        text.push("转入数量小于等于0")
       }
-      if(text.length){
-        text.unshift("错误：")
+      if (text.length) {
+        text.unshift("错误：");
         this.$Message.error(text.join(" "));
         return;
       }
 
       _this.$Loading.start();
+      _this.modal_loading = true;
 
       this.doTransfer()
         .then(txhash => {
           _this.$Loading.finish();
+          _this.modal_loading = false;
+          _this.closeModal();
           _this.$Message.success(`提交成功：${txhash}`);
         })
         .catch(err => {
           _this.$Loading.error();
+          _this.modal_loading = false;
+          _this.closeModal();
           _this.$Message.error("提交失败");
-          console.log(err);
         });
     },
     doTransfer(resolve, reject) {
@@ -204,7 +240,9 @@ export default {
           valueEth = this.transfer_token,
           value,
           gasPrice,
-          gas;
+          gas,
+          args = [];
+
         try {
           if (this.token_address === "ETH") {
             value = parseFloat(valueEth) * 1.0e18;
@@ -351,14 +389,14 @@ export default {
       flex-grow: 1;
     }
   }
-  .receive-wallet-wrapper{
-    font-size:16px;
-    color:#ccc;
-    .receive-wallet-qrcode{
-      margin-top:30px;
-      .qrcode{
-        margin-left:100px;
-      }        
+  .receive-wallet-wrapper {
+    font-size: 16px;
+    color: #ccc;
+    .receive-wallet-qrcode {
+      margin-top: 30px;
+      .qrcode {
+        margin-left: 100px;
+      }
     }
   }
 }

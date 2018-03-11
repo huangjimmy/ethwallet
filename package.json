@@ -7,8 +7,8 @@
   "productName": "cpscoin",
   "scripts": {
     "start": "npm run build && electron .",
-    "dev": "webpack-dev-server --inline --hot",
-    "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
+    "dev": "webpack-dev-server --inline --hot --target=web",
+    "build": "cross-env NODE_ENV=production webpack --progress --hide-modules --target=electron-renderer",
     "predeploy": "npm run build",
     "deploy": "surge --project . --domain vue-2-simple-routing-example.surge.sh",
     "pack": "electron-packager . --platform=win32"
@@ -44,6 +44,7 @@
     "css-loader": "^0.28.10",
     "electron": "^1.8.3",
     "electron-packager": "^11.1.0",
+    "electron-prompt": "^0.5.0",
     "elliptic": "^3.1.0",
     "eth-lightwallet": "^3.0.1",
     "ethereumjs-tx": "^1.3.3",
@@ -59,6 +60,7 @@
     "lodash": "^4.17.5",
     "rlp": "^2.0.0",
     "scrypt-async": "^1.2.0",
+    "smalltalk": "^2.5.1",
     "style-loader": "^0.20.2",
     "surge": "^0.19.0",
     "tweetnacl": "^1.0.0",
