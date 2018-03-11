@@ -83,6 +83,11 @@
             <h1 class="wallet-address">
               <i class="icon iconfont icon-key"></i>
               <span v-text="wallet.address"></span>
+              <p>
+              <span class="token-wrapper" v-for="(value, key) in wallet" v-bind:key="key">
+                <span v-show="key !== 'address' && key !== 'keystore'">{{value}} {{key}}</span>
+              </span>
+              </p>
             </h1>
           </div>
           <a href="javascript:;" class="export" @click="proceedExport(wallet)">导出秘钥</a>
@@ -128,9 +133,10 @@ export default {
       this.user_password = "";
       this.seed = "";
     },
+    
     newAddresses(password, keystore) {
       let _this = this,
-        address;
+          address;
       keystore.keyFromPassword(password, function(err, pwDerivedKey) {
         if (err) {
           reportUtils.report(err);
@@ -138,8 +144,10 @@ export default {
         }
         keystore.generateNewAddress(pwDerivedKey, 1);
         _.each(keystore.getAddresses(), address => {
-
-          _this.updateWallet(address, password, keystore);
+          _this.updateWallet(_this.getBalance({
+            address:address,
+            keystore:keystore
+          }));
         })
       });
     },
@@ -188,6 +196,40 @@ export default {
         }
       );
     },
+    getBalance(wallet) {
+      web3Utils.setWebProvider(wallet.keystore);
+      
+      var _this = this,
+        web3 = web3Utils.getWeb3(),
+        erc20tokens = web3Utils.getErc20Tokens(),
+        _wallet = _.defaults({}, wallet),
+        _token_list = [];
+
+      _token_list.push({
+        value: "ETH",
+        label: "ETH"
+      });
+      _wallet["ETH"] = web3Utils.toRealAmount(
+        web3.eth.getBalance(_wallet.address)
+      );
+
+      _.forEach(erc20tokens, token => {
+        let balance = token.contract.balanceOf("" + _wallet.address);
+        _token_list.push({
+          value: token.address,
+          label: token.symbol
+        });
+        // _wallet[token.contract.address] = web3Utils.toRealAmount(
+        //   balance,
+        //   token.decimals
+        // );
+        _wallet[token.symbol] = web3Utils.toRealAmount(
+          balance,
+          token.decimals
+        );
+      });
+      return _.defaults({}, wallet, _wallet);
+    },
     proceedStoreToPassword() {
       if (!this.seed) {
         this.$Message.error("输入seed");
@@ -230,27 +272,27 @@ export default {
         _this.closeModal();
       }
     },
-    updateWallet(address, password, keystore) {
-      let wallet = _.find(this.wallet_list, ["address", address]);
-      if (wallet) {
-        lightwallet.keystore.upgradeOldSerialized(wallet.keystore, password, function(keystore){
-          wallet.keystore = keystore;
-        })
-        
+    updateWallet(wallet) {
+      let index = _.findIndex(this.wallet_list, ["address", wallet.address]);
+      if (index != -1) {
+        // lightwallet.keystore.upgradeOldSerialized(wallet.keystore, password, function(keystore){
+        //   wallet.keystore = keystore;
+        // })
+        this.wallet_list[index] = wallet;
       } else {
-        this.wallet_list.push({
-          address: address,
-          keystore: keystore
-        });
+        this.wallet_list.push(wallet);
         dbUtils.set(
           "address_list",
-          [dbUtils.get("address_list"), address].join(" ")
+          [dbUtils.get("address_list"), wallet.address].join(" ")
         );
       }
-      dbUtils.set(address, keystore.serialize());
+      dbUtils.set(wallet.address, wallet.keystore.serialize());
     },
     loadWallet() {
-      this.wallet_list = this.$root.globalData.wallet_list;
+      let _this = this;
+      this.wallet_list = this.$root.globalData.wallet_list.map( wallet => {
+        return _this.getBalance(wallet);
+      })
     },
     proceedExport(wallet) {
       this.openModal("password_export");
@@ -287,6 +329,11 @@ export default {
 .seed-export {
   font-size: 30px;
   color: red;
+}
+.token-wrapper{
+  margin-right:10px;
+  font-size:12px;
+  color:#ccc;
 }
 .wallet-list {
   display: flex;

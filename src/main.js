@@ -1,10 +1,11 @@
 import Vue from "vue";
-import _ from 'lodash';
+import _ from "lodash";
 import lightwallet from "eth-lightwallet";
 import iView from "iview";
 import routes from "./routes";
 import MainLayout from "./layouts/MainLayout.vue";
 import dbUtils from "./dbUtils";
+import web3Utils from "./web3Utils";
 
 Vue.use(iView);
 
@@ -45,5 +46,7 @@ const app = new Vue({
     window.onhashchange = function(e) {
       _this.currentView = window.location.hash.replace("#", "");
     };
+  },
+  methods: {
   }
 });

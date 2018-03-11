@@ -6,19 +6,20 @@
     </div>
     <div class="filter-wrapper">
     </div>
-    <div class="content-wrapper" v-if="method=='receive'">
+    <div class="content-wrapper" v-show="method=='receive'">
       <div class="receive-wallet-wrapper">
         <div class="receive-wallet-selector">
-        当前钱包：<i-select v-model="current_wallet.address" class="wallet-source" placeholder="选择钱包" @on-change="changeReceiveWallet">
-          <Option v-for="item in wallet_list" :value="item.address" :key="item.address">{{ item.address }}</Option>
-        </i-select>
+          当前钱包：
+          <i-select v-model="current_wallet.address" class="wallet-source" placeholder="选择钱包" @on-change="changeReceiveWallet">
+            <Option v-for="item in wallet_list" :value="item.address" :key="item.address">{{ item.address }}</Option>
+          </i-select>
         </div>
         <div class="receive-wallet-qrcode">
-          二维码：<div class="qrcode" id="qrcode"></div>
+          二维码：<p class="qrcode" id="qrcode"></p>
         </div>
       </div>
     </div>
-    <div class="content-wrapper" v-if="method=='transfer'">
+    <div class="content-wrapper" v-show="method=='transfer'">
       <div class="form-item">
         从<i-select v-model="current_wallet.address" class="wallet-source" placeholder="选择钱包" @on-change="changeTransferWallet">
             <Option v-for="item in wallet_list" :value="item.address" :key="item.address">{{ item.address }}</Option>
@@ -47,7 +48,7 @@
       <div class="result-wrapper">
         <div class="form-item">
           共计<span class="transfer-amount" v-text="transfer_token"  v-if="token"></span><span class="token"  v-text="token"></span>
-          <i-button class="button ready-to-transfer" size="large" @click="openModal('password_transaction')">确定</i-button>
+          <i-button class="button ready-to-transfer" size="large" @click="proceedTranfer">确定</i-button>
         </div>
       </div>
       <Modal v-model="modal.password_transaction" width="360" :closable="false" :mask-closable="false">
@@ -85,7 +86,8 @@ export default {
       current_wallet: {},
       target_address: "",
       qrcode: "",
-      password: "",
+      user_password: "",
+      modal_loading:false,
       modal:{
         password_transaction:false
       }
@@ -156,10 +158,10 @@ export default {
 
       web3Utils.setWebProvider(current_wallet.keystore);
       this.current_wallet = current_wallet;
-      this.getBalances(this.current_wallet);
+      this.getBalance(this.current_wallet);
       this.$Loading.finish();
     },
-    getBalances(wallet, resolve, reject) {
+    getBalance(wallet) {
       var _this = this,
         web3 = web3Utils.getWeb3(),
         erc20tokens = web3Utils.getErc20Tokens(),
@@ -185,6 +187,7 @@ export default {
           token.decimals
         );
       });
+      // return _.defaults({}, wallet, _wallet);
       _this.current_wallet = _.defaults(wallet, _wallet);
       _this.wallet_list[
         _.findIndex(_this.wallet_list, { address: wallet.address })
@@ -195,7 +198,7 @@ export default {
       this.method = method;
       this.current_wallet = {};
     },
-    transfer() {
+    proceedTranfer(){
       var _this = this,
         text = [];
       if (!this.current_wallet || !this.current_wallet.address) {
@@ -212,6 +215,10 @@ export default {
         this.$Message.error(text.join(" "));
         return;
       }
+      this.openModal('password_transaction')
+    },
+    transfer() {
+      var _this = this;
 
       _this.$Loading.start();
       _this.modal_loading = true;
