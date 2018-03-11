@@ -35,6 +35,7 @@
 
 <script>
 import axios from "axios";
+import _ from 'lodash';
 import MainLayout from "../layouts/MainLayout.vue";
 import web3Utils from "../web3Utils";
 

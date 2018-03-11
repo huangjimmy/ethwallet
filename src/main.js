@@ -1,4 +1,5 @@
 import Vue from "vue";
+import _ from 'lodash';
 import lightwallet from "eth-lightwallet";
 import iView from "iview";
 import routes from "./routes";
