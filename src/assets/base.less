@@ -1,0 +1,36 @@
+body {
+  background: #fff;
+  margin:0;
+  padding:0;
+}
+a,
+a:hover {
+  color: #333;
+}
+*{
+  font-family: Helvetica, Tahoma, Arial, "PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei", "WenQuanYi Micro Hei";
+}
+.clearfix{
+  &::before,&::after{
+    content:" ";
+    font-size:0;
+    clear:both;
+    display:table;
+    width:100%;
+  }
+}
+.button {
+  display: inline-block;
+  font-size: 14px;
+  padding: 4px 15px;
+  color: #ccc;
+  background: rgba(72, 85, 116, 1);
+  &:hover {
+    border:1px solid #9f87a9;
+    color:#9f87a9;
+  }
+}
+
+.danger{
+  color:red;
+}
