@@ -23,6 +23,17 @@ function createWindow() {
     })
   );
 
+  win.webContents.executeJavaScript(`
+    var path = require('path');
+    module.paths.push(path.resolve('node_modules'));
+    module.paths.push(path.resolve('../node_modules'));
+    module.paths.push(path.resolve(__dirname, '..', '..', 'electron', 'node_modules'));
+    module.paths.push(path.resolve(__dirname, '..', '..', 'electron.asar', 'node_modules'));
+    module.paths.push(path.resolve(__dirname, '..', '..', 'app', 'node_modules'));
+    module.paths.push(path.resolve(__dirname, '..', '..', 'app.asar', 'node_modules'));
+    path = undefined;
+  `);
+
   // 打开开发者工具。
   win.webContents.openDevTools();
 
@@ -32,6 +43,7 @@ function createWindow() {
     // 通常会把多个 window 对象存放在一个数组里面，
     // 与此同时，你应该删除相应的元素。
     win = null;
+    app.quit();
   });
 }
 
