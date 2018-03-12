@@ -2,18 +2,21 @@
 
 ## Build Setup
 
-``` bash
+
 # install dependencies
+``` bash
 yarn install
-
+```
 # serve with hot reload at localhost:8080
+``` bash
 yarn dev
-
+```
 # launch electron with dev mode
+``` bash
 yarn start
-
+```
 # package
-
+``` bash
 electron-packager .  CPSWallet   --overwrite --out=./outapp/ --no-prune
 
 ```
