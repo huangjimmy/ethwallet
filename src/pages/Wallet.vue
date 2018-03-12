@@ -84,8 +84,8 @@
               <i class="icon iconfont icon-key"></i>
               <span v-text="wallet.address"></span>
               <p>
-              <span class="token-wrapper" v-for="(value, key) in wallet" v-bind:key="key">
-                <span v-show="key !== 'address' && key !== 'keystore'">{{value}} {{key}}</span>
+              <span class="token-wrapper" v-for="(token, index) in wallet.balances" v-bind:key="index">
+                <span>{{token.balance}} {{token.symbol}}</span>
               </span>
               </p>
             </h1>
@@ -133,10 +133,10 @@ export default {
       this.user_password = "";
       this.seed = "";
     },
-    
+
     newAddresses(password, keystore) {
       let _this = this,
-          address;
+        address;
       keystore.keyFromPassword(password, function(err, pwDerivedKey) {
         if (err) {
           reportUtils.report(err);
@@ -144,11 +144,13 @@ export default {
         }
         keystore.generateNewAddress(pwDerivedKey, 1);
         _.each(keystore.getAddresses(), address => {
-          _this.updateWallet(_this.getBalance({
-            address:address,
-            keystore:keystore
-          }));
-        })
+          _this.updateWallet(
+            _this.getBalance({
+              address: address,
+              keystore: keystore
+            })
+          );
+        });
       });
     },
     proceedCreateToPassword() {
@@ -186,7 +188,7 @@ export default {
           }
           try {
             _this.newAddresses(password, ks);
-            web3Utils.setWebProvider(ks);  
+            web3Utils.setWebProvider(ks);
           } catch (err) {
             reportUtils.report(err);
             _this.$Message.error("创建失败");
@@ -198,35 +200,35 @@ export default {
     },
     getBalance(wallet) {
       web3Utils.setWebProvider(wallet.keystore);
-      
+
       var _this = this,
         web3 = web3Utils.getWeb3(),
         erc20tokens = web3Utils.getErc20Tokens(),
         _wallet = _.defaults({}, wallet),
-        _token_list = [];
+        _token = {
+          address: "ETH",
+          symbol: "ETH"
+        };
 
-      _token_list.push({
-        value: "ETH",
-        label: "ETH"
-      });
-      _wallet["ETH"] = web3Utils.toRealAmount(
+      _wallet.balances = [];
+
+      _token.balance = web3Utils.toRealAmount(
         web3.eth.getBalance(_wallet.address)
       );
 
+      _wallet.balances.push(_token);
+
       _.forEach(erc20tokens, token => {
         let balance = token.contract.balanceOf("" + _wallet.address);
-        _token_list.push({
-          value: token.address,
-          label: token.symbol
-        });
-        // _wallet[token.contract.address] = web3Utils.toRealAmount(
-        //   balance,
-        //   token.decimals
-        // );
-        _wallet[token.symbol] = web3Utils.toRealAmount(
-          balance,
-          token.decimals
-        );
+        _token = {
+          address: token.address,
+          symbol: token.symbol,
+          balance:parseFloat(web3Utils.toRealAmount(
+            balance,
+            token.decimals
+          ))
+        };
+        _wallet.balances.push(_token);
       });
       return _.defaults({}, wallet, _wallet);
     },
@@ -244,7 +246,7 @@ export default {
 
       this.modal_loading = true;
 
-      if(lightwallet.keystore.isSeedValid(seed)){
+      if (lightwallet.keystore.isSeedValid(seed)) {
         lightwallet.keystore.createVault(
           {
             password: password,
@@ -258,7 +260,7 @@ export default {
             }
             try {
               _this.newAddresses(password, ks);
-              web3Utils.setWebProvider(ks);  
+              web3Utils.setWebProvider(ks);
             } catch (e) {
               reportUtils.report(e);
               _this.$Message.error("恢复失败");
@@ -267,7 +269,7 @@ export default {
             }
           }
         );
-      }else{
+      } else {
         _this.$Message.error("无效的Seed");
         _this.closeModal();
       }
@@ -290,9 +292,9 @@ export default {
     },
     loadWallet() {
       let _this = this;
-      this.wallet_list = this.$root.globalData.wallet_list.map( wallet => {
+      this.wallet_list = this.$root.globalData.wallet_list.map(wallet => {
         return _this.getBalance(wallet);
-      })
+      });
     },
     proceedExport(wallet) {
       this.openModal("password_export");
@@ -330,10 +332,10 @@ export default {
   font-size: 30px;
   color: red;
 }
-.token-wrapper{
-  margin-right:10px;
-  font-size:12px;
-  color:#ccc;
+.token-wrapper {
+  margin-right: 10px;
+  font-size: 12px;
+  color: #ccc;
 }
 .wallet-list {
   display: flex;
@@ -357,6 +359,7 @@ export default {
     }
     .export {
       text-align: right;
+      width: 100px;
       flex-direction: row;
       font-size: 12px;
       color: #fff;

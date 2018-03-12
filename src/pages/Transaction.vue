@@ -35,14 +35,14 @@
           <i-input-number v-model="transfer_token" class="transfer-token" :max="max" :min="min" :step="step">
           </i-input-number>
             <i-select v-model="token_address" slot="append" class="transfer-token-selector" placeholder="币种">
-                <Option v-for="item in token_list" :value="item.value" :key="item.value">{{ item.label }}</Option>
+                <Option v-for="item in current_wallet.balances" :value="item.address" :key="item.address">{{ item.symbol }}</Option>
             </i-select>
         </div>
       </div>
       <div class="form-item" v-show="token_address && current_wallet">
         持有
         <div class="have-token-group">
-            <span class="have-token" v-text="current_wallet[token_address]"></span><span class="token" v-text="token"></span>
+            <span class="have-token" v-text="max"></span><span class="token" v-text="token"></span>
         </div>
       </div>
       <div class="result-wrapper">
@@ -81,9 +81,10 @@ export default {
       method: "transfer",
       token_address: "",
       transfer_token: 0,
-      token_list: [],
       wallet_list: [],
-      current_wallet: {},
+      current_wallet: {
+        balances:[]
+      },
       target_address: "",
       qrcode: "",
       user_password: "",
@@ -96,13 +97,13 @@ export default {
   computed: {
     token: function() {
       let _this = this,
-        _token = _.find(this.token_list, { value: _this.token_address });
-      return _token ? _token.label : "";
+        _token = _.find(this.current_wallet.balances, { address: _this.token_address });
+      return _token ? _token.symbol : "";
     },
     max: function() {
-      return this.current_wallet
-        ? Number.parseFloat(this.current_wallet[this.token_address])
-        : 0;
+      let _this = this,
+        _token = _.find(this.current_wallet.balances, { value: _this.token_address });
+      return _token ? _token.balance : 0;
     },
     min: function() {
       return 0;
@@ -166,33 +167,35 @@ export default {
         web3 = web3Utils.getWeb3(),
         erc20tokens = web3Utils.getErc20Tokens(),
         _wallet = _.defaults({}, wallet),
-        _token_list = [];
+        _token = {
+          address: "ETH",
+          symbol: "ETH"
+        };
 
-      _token_list.push({
-        value: "ETH",
-        label: "ETH"
-      });
-      _wallet["ETH"] = web3Utils.toRealAmount(
+      _wallet.balances = [];
+
+      _token.balance = web3Utils.toRealAmount(
         web3.eth.getBalance(_wallet.address)
       );
 
+      _wallet.balances.push(_token);
+
       _.forEach(erc20tokens, token => {
         let balance = token.contract.balanceOf("" + _wallet.address);
-        _token_list.push({
-          value: token.address,
-          label: token.symbol
-        });
-        _wallet[token.contract.address] = web3Utils.toRealAmount(
-          balance,
-          token.decimals
-        );
-      });
-      // return _.defaults({}, wallet, _wallet);
+        _token = {
+          address: token.address,
+          symbol: token.symbol,
+          balance:parseFloat(web3Utils.toRealAmount(
+            balance,
+            token.decimals
+          ))
+        };
+        _wallet.balances.push(_token);
+      });    
       _this.current_wallet = _.defaults(wallet, _wallet);
       _this.wallet_list[
         _.findIndex(_this.wallet_list, { address: wallet.address })
       ] = _.cloneDeep(_this.current_wallet);
-      _this.token_list = _token_list;
     },
     changMethod(method) {
       this.method = method;
