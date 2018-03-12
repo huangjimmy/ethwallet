@@ -13,6 +13,7 @@ yarn dev
 yarn start
 
 # package
-electron-packager . [--platform=win32]
+
+electron-packager .  CPSWallet   --overwrite --out=./outapp/ --no-prune
 
 ```

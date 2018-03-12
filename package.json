@@ -11,7 +11,8 @@
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules --target=electron-renderer",
     "predeploy": "npm run build",
     "deploy": "surge --project . --domain vue-2-simple-routing-example.surge.sh",
-    "pack": "electron-packager . --platform=win32"
+    "pack": "electron-packager . CPSWallet --platform=win32  --overwrite --out=./dist/  --no-prune",
+    "packall":" electron-packager . CPSWallet --overwrite --out=./dist/ --no-prune"
   },
   "build": {
     "appId": "com.electron.block",
@@ -43,6 +44,7 @@
     "crypto-js": "^3.1.5",
     "css-loader": "^0.28.10",
     "electron": "^1.8.3",
+    "electron-default-menu": "^1.0.1",
     "electron-packager": "^11.1.0",
     "electron-prompt": "^0.5.0",
     "elliptic": "^3.1.0",

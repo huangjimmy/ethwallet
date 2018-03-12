@@ -1,9 +1,11 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, Menu, shell } = require("electron");
 const path = require("path");
 const url = require("url");
 
+const defaultMenu = require('electron-default-menu');
+
 // 保持一个对于 window 对象的全局引用，如果你不这样做，
-// 当 JavaScript 对象被垃圾回收， window 会被自动地关闭
+// 当 JavaScript 对象被垃圾回收， window 会被自动地
 let win;
 
 function createWindow() {
@@ -45,6 +47,10 @@ function createWindow() {
     win = null;
     app.quit();
   });
+
+  const menu = defaultMenu(app, shell);
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(menu));
 }
 
 // Electron 会在初始化后并准备
