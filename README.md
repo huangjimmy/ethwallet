@@ -17,6 +17,6 @@ yarn start
 ```
 # package
 ``` bash
-electron-packager .  CPSWallet   --overwrite --out=./outapp/ --no-prune
+electron-packager .  CPSWallet   --all --out=./outapp/ --no-prune --asar=true --overwrite
 
 ```
