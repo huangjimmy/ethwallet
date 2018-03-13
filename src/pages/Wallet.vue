@@ -289,6 +289,7 @@ export default {
         );
       }
       dbUtils.set(wallet.address, wallet.keystore.serialize());
+      this.$root.globalData.wallet_list = this.wallet_list;
     },
     loadWallet() {
       let _this = this;
