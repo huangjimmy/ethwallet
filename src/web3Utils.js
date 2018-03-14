@@ -5,6 +5,8 @@ const web3 = new Web3();
 
 let erc20tokens;
 
+const CPS_TEST_ADDR = "0x0E3E4BfD5a2572c1E0475029D43Ac0D274466017";
+
 const erc20addrs = [
     "0x0E3E4BfD5a2572c1E0475029D43Ac0D274466017",
   //"0xFFAB690958a463EB859B6348279A2F5FDdB8Eba1",
@@ -30,6 +32,9 @@ function setWebProvider(ks){
 
   erc20tokens = erc20addrs.map(function (addr) {
     var contract = ERC20Contract.at(addr)
+      if(addr == CPS_TEST_ADDR){
+          return {"address":addr, "contract": contract, "decimals": 8, "symbol": "CPSTEST" };
+      }
     return {"address":addr, "contract": contract, "decimals": contract.decimals.call(), "symbol": contract.symbol.call() };
   })
 }

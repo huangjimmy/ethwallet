@@ -12,7 +12,7 @@
     "predeploy": "npm run build",
     "deploy": "surge --project . --domain vue-2-simple-routing-example.surge.sh",
     "pack": "electron-packager . CPSWallet --platform=win32  --overwrite --out=./dist/  --no-prune",
-    "packall":" electron-packager . CPSWallet --overwrite --out=./dist/ --no-prune"
+    "packall":" electron-packager . CPSWallet --overwrite --out=./outapp/ --no-prune --asar"
   },
   "build": {
     "appId": "com.electron.block",

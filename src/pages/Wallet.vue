@@ -90,7 +90,7 @@
               </p>
             </h1>
           </div>
-          <a href="javascript:;" class="export" @click="proceedExport(wallet)">导出秘钥</a>
+          <a href="javascript:;" class="export" @click="proceedExport(wallet)">备份钱包(导出秘钥)</a>
         </li>
       </ul>
     </div>
@@ -212,24 +212,32 @@ export default {
 
       _wallet.balances = [];
 
-      _token.balance = web3Utils.toRealAmount(
-        web3.eth.getBalance(_wallet.address)
-      );
+      try {
 
-      _wallet.balances.push(_token);
 
-      _.forEach(erc20tokens, token => {
-        let balance = token.contract.balanceOf("" + _wallet.address);
-        _token = {
-          address: token.address,
-          symbol: token.symbol,
-          balance:parseFloat(web3Utils.toRealAmount(
-            balance,
-            token.decimals
-          ))
-        };
-        _wallet.balances.push(_token);
-      });
+          _token.balance = web3Utils.toRealAmount(
+              web3.eth.getBalance(_wallet.address)
+          );
+
+          _wallet.balances.push(_token);
+
+          _.forEach(erc20tokens, token => {
+              let balance = token.contract.balanceOf("" + _wallet.address);
+              _token = {
+                  address: token.address,
+                  symbol: token.symbol,
+                  balance: parseFloat(web3Utils.toRealAmount(
+                      balance,
+                      token.decimals
+                  ))
+              };
+              _wallet.balances.push(_token);
+          });
+      }
+      catch (e) {
+          reportUtils.report(e);
+          _this.$Message.error("获取余额失败");
+      }
       return _.defaults({}, wallet, _wallet);
     },
     proceedStoreToPassword() {
@@ -364,7 +372,7 @@ export default {
       flex-direction: row;
       font-size: 12px;
       color: #fff;
-      visibility: hidden;
+      //visibility: hidden;
       cursor: pointer;
     }
     &:hover,

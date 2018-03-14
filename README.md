@@ -17,6 +17,6 @@ yarn start
 ```
 # package
 ``` bash
-electron-packager .  CPSWallet   --all --out=./outapp/ --no-prune --asar=true --overwrite
+yarn build && yarn predeploy &&  electron-packager . CPSWallet --asar=true --all --overwrite --out=./outapp/ --no-prune
 
 ```
