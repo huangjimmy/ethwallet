@@ -12,7 +12,7 @@ Vue.use(iView);
 const app = new Vue({
   el: "#app",
   data: {
-    currentView: "home",
+    currentView: "wallet",
     globalData: {
       wallet_list: [],
       current_wallet: {}
@@ -23,6 +23,8 @@ const app = new Vue({
     home: routes.home,
     wallet: routes.wallet,
     transaction: routes.transaction,
+      send: routes.send,
+      receive: routes.receive,
     history: routes.history
   },
   created() {

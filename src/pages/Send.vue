@@ -1,32 +1,18 @@
 <template>
   <div>
-    <div class="btn-wrapper">
-      <i-button class="button" :class="{'active':method=='transfer'}" @click="changMethod('transfer')">发送</i-button>
-      <i-button class="button" :class="{'active':method=='receive'}" @click="changMethod('receive')">收款</i-button>
-    </div>
+
     <div class="filter-wrapper">
     </div>
-    <div class="content-wrapper" v-show="method=='receive'">
-      <div class="receive-wallet-wrapper">
-        <div class="receive-wallet-selector">
-          当前钱包：
-          <i-select v-model="current_wallet.address" class="wallet-source" placeholder="选择钱包" @on-change="changeReceiveWallet">
-            <Option v-for="item in wallet_list" :value="item.address" :key="item.address">{{ item.address }}</Option>
-          </i-select>
-        </div>
-        <div class="receive-wallet-qrcode">
-          收款二维码：<p class="qrcode" id="qrcode"></p>
-        </div>
-      </div>
-    </div>
-    <div class="content-wrapper" v-show="method=='transfer'">
+
+    <div class="content-wrapper">
       <div class="form-item">
-        从<i-select v-model="current_wallet.address" class="wallet-source" placeholder="选择钱包" @on-change="changeTransferWallet">
+        从:<i-select v-model="current_wallet.address" class="wallet-source round-corner-input" placeholder="选择钱包" @on-change="changeTransferWallet">
             <Option v-for="item in wallet_list" :value="item.address" :key="item.address">{{ item.address }}</Option>
         </i-select>
       </div>
+        <div class="gap clearfix"></div>
       <div class="form-item">
-        转入<i-input v-model="target_address" placeholder="转入地址" class="wallet-target"></i-input>
+        付给:<i-input v-model="target_address" placeholder="转入地址" class="wallet-target"></i-input>
       </div>
       <div class="gap clearfix"></div>
       <div class="form-item">
@@ -131,20 +117,6 @@ export default {
       this.modal_loading = false;
       this.user_password = "";
     },
-    generateQRCode(text) {
-      let img_path = "./assets/logo.png",
-        _qrcode = document.querySelector("#qrcode");
-      _qrcode.innerHTML = "";
-      _qrcode.appendChild(kjua({ text: text }));
-    },
-    changeReceiveWallet(address) {
-      let _this = this,
-        current_wallet = _.cloneDeep(
-          _.find(this.$root.globalData.wallet_list, ["address", address])
-        );
-      this.current_wallet = current_wallet;
-      this.generateQRCode(address);
-    },
     changeTransferWallet(address) {
       let _this = this,
         web3 = web3Utils.getWeb3(),
@@ -196,10 +168,6 @@ export default {
       _this.wallet_list[
         _.findIndex(_this.wallet_list, { address: wallet.address })
       ] = _.cloneDeep(_this.current_wallet);
-    },
-    changMethod(method) {
-      this.method = method;
-      this.current_wallet = {};
     },
     proceedTranfer(){
       var _this = this,
@@ -409,5 +377,9 @@ export default {
       }
     }
   }
+    .round-corner-input{
+        border-radius:10px;
+        background: rgb(40,40,40);
+    }
 }
 </style>

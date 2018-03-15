@@ -72,7 +72,7 @@
         </div>
       </Modal>
       <i-button class="button" @click="openModal('restore_wallet')">恢复钱包</i-button>
-      <i-button class="button">帮助</i-button>
+      <!-- <i-button class="button">帮助</i-button> -->
     </div>
     <div class="filter-wrapper">
     </div>
@@ -90,7 +90,7 @@
               </p>
             </h1>
           </div>
-          <a href="javascript:;" class="export" @click="proceedExport(wallet)">备份钱包(导出秘钥)</a>
+          <a href="javascript:;" class="export" @click="proceedExport(wallet)">备份钱包(导出助记词)</a>
         </li>
       </ul>
     </div>
@@ -341,10 +341,11 @@ export default {
   font-size: 30px;
   color: red;
 }
+
 .token-wrapper {
   margin-right: 10px;
-  font-size: 12px;
-  color: #ccc;
+  font-size: 14px;
+  color: #ffffff;
 }
 .wallet-list {
   display: flex;
@@ -356,7 +357,7 @@ export default {
     align-items: center;
     height: 70px;
     padding: 0 20px;
-    background: rgba(90, 84, 111, 1);
+    background: rgba(46, 46, 46, 1);
     margin-bottom: 10px;
     border: 1px solid rgb(204, 204, 204);
     .wallet-wrapper {
@@ -368,7 +369,7 @@ export default {
     }
     .export {
       text-align: right;
-      width: 100px;
+      width: 120px;
       flex-direction: row;
       font-size: 12px;
       color: #fff;
@@ -377,7 +378,7 @@ export default {
     }
     &:hover,
     &.active {
-      background: rgb(159, 135, 169);
+      background: rgb(46, 46, 46);
       border: 1px solid #fff;
       .wallet-name {
         color: #efefef;

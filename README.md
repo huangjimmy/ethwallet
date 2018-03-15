@@ -49,7 +49,7 @@ yarn start
 ```
 # Package application
 ``` bash
-yarn build && yarn predeploy &&  electron-packager . CPSWallet --asar=true --all --overwrite --out=./outapp/ --no-prune
+yarn build && yarn predeploy &&  electron-packager . CPSWallet --asar=true  --platform=win32,darwin,linux --arch=x64  --overwrite --out=./outapp/ --no-prune
 
 ```
 
