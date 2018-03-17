@@ -3,7 +3,6 @@
     <div class="sidebar">
       <div class="logobar">
         <a href="/"><img class="logo" src="../assets/logo.png" alt=""></a>
-        <span class="slogan">CPSCOIN</span>
       </div>
       <ul class="menu">
         <li class="menu-item" v-bind:class="{'menu-item-selected': this.$root.currentView == 'wallet','menu-item-normal': this.$root.currentView != 'wallet'}">
@@ -87,8 +86,8 @@ export default {
     justify-content: center;
     width:100%;
     .logo {
-      width: 52px;
-      height: 52px;
+      width: 265px;
+      height: 70px;
     }
     .slogan {
       margin-left: 5px;

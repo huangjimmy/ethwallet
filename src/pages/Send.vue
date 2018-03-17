@@ -37,12 +37,18 @@
           <i-button class="button ready-to-transfer" size="large" @click="proceedTranfer">确定</i-button>
         </div>
       </div>
+      <div class="content-wrapper">
+          <div class="gap clearfix"></div>
+        <div class="content-wrapper token-amount">
+            <p>（温馨提示：转帐前请确保付款地址内拥有少量的ETH余额，这将用以缴纳以太坊网络的GAS手续费。您可以从任何钱包或交易所直接将ETH转入您的CPS地址，因为您的CPS地址同时也是一个以太坊地址，并支持所有基于以太坊协议的代币存储。 ）</p>
+        </div>
+      </div>
       <Modal v-model="modal.password_transaction" width="360" :closable="false" :mask-closable="false">
         <p slot="header" style="text-align:center">
-            <span>输入密码</span>
+            <span>身份验证</span>
         </p>
         <div style="text-align:center">
-            <i-input type="password" v-model="user_password" placeholder="Type your password" style="width: 100%"></i-input>
+            <i-input type="password" v-model="user_password" placeholder="请输入密码" style="width: 100%"></i-input>
         </div>
         <div slot="footer" style="text-align:center;">
             <i-button class="button" @click="transferOffline" :loading="modal_loading" >生成交易数据</i-button>

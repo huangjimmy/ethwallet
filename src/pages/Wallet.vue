@@ -7,7 +7,7 @@
             <span>创建新钱包</span>
         </p>
         <div style="text-align:center">
-            <i-input v-model="user_entropy" placeholder="Type random text to generate entropy" style="width: 100%"></i-input>
+            <i-input v-model="user_entropy" placeholder="请输入一串随机的字符串，以随机生成助记词" style="width: 100%"></i-input>
         </div>
         <div slot="footer" style="text-align:center;">
             <i-button class="button" @click="proceedCreateToPassword">创建</i-button>
@@ -16,8 +16,9 @@
       </Modal>
       <Modal v-model="modal.password_create" width="360" :closable="false" :mask-closable="false">
         <div style="text-align:center">
-            <p style="text-align:left">Your new wallet seed is: "<span class="danger" v-text="seed"></span>". Please write it down on paper or in a password manager, you will need it to access your wallet. Do not let anyone see this seed or they can take your Ether. Please enter a password to encrypt your seed while in the browser.</p>
-            <i-input type="password" v-model="user_password" placeholder="Type your password" style="width: 100%"></i-input>
+            <p style="text-align:left">你的新钱包助记词是： "<span class="danger" v-text="seed"></span>"。 温馨提示：请写在纸上并妥善保管，您将需要它来访问钱包。不要让任何人看到这段助记词，否则将存在巨大的数字资产安全风险。请在下方输入刚才的密码，确认您已经将助记词写在纸上并妥善保管，并完成新钱包的创建。
+            </p>
+            <i-input type="password" v-model="user_password" placeholder="请输入密码" style="width: 100%"></i-input>
         </div>
         <div slot="footer" style="text-align:center;">
             <i-button class="button" :loading="modal_loading" @click="createWallet">确定</i-button>
@@ -26,10 +27,10 @@
       </Modal>
       <Modal v-model="modal.restore_wallet" width="360" :closable="false" :mask-closable="false">
         <p slot="header" style="text-align:center">
-            <span>seed</span>
+            <span>恢复钱包</span>
         </p>
         <div style="text-align:center">
-            <i-input v-model="seed" placeholder="Type your wallet seed" style="width: 100%"></i-input>
+            <i-input v-model="seed" placeholder="请输入助记词" style="width: 100%"></i-input>
         </div>
         <div slot="footer" style="text-align:center;">
             <i-button class="button" @click="proceedStoreToPassword">确定</i-button>
@@ -38,10 +39,10 @@
       </Modal>
       <Modal v-model="modal.password_restore" width="360" :closable="false" :mask-closable="false">
         <p slot="header" style="text-align:center">
-            <span>输入密码</span>
+            <span>恢复钱包</span>
         </p>
         <div style="text-align:center">
-            <i-input type="password" v-model="user_password" placeholder="Type your password" style="width: 100%"></i-input>
+            <i-input type="password" v-model="user_password" placeholder="请输入密码" style="width: 100%"></i-input>
         </div>
         <div slot="footer" style="text-align:center;">
             <i-button class="button" :loading="modal_loading" @click="restoreWallet">确定</i-button>
@@ -50,7 +51,7 @@
       </Modal>
       <Modal v-model="modal.seed_export" width="360" :closable="false" :mask-closable="false">
         <p slot="header" style="text-align:center">
-            <span>请记牢Seed</span>
+            <span>请牢记您的助记词，写在纸上并妥善保管</span>
         </p>
         <div style="text-align:center">
           <p class="seed-export">{{seed}}</p>    
@@ -61,10 +62,10 @@
       </Modal>
       <Modal v-model="modal.password_export" width="360" :closable="false" :mask-closable="false">
         <p slot="header" style="text-align:center">
-            <span>输入密码</span>
+            <span>备份钱包</span>
         </p>
         <div style="text-align:center">
-            <i-input type="password" v-model="user_password" placeholder="Type your password" style="width: 100%"></i-input>
+            <i-input type="password" v-model="user_password" placeholder="请输入密码" style="width: 100%"></i-input>
         </div>
         <div slot="footer" style="text-align:center;">
             <i-button class="button" :loading="modal_loading" @click="exportWallet">确定</i-button>
@@ -79,10 +80,11 @@
     <div class="content-wrapper">
       <ul class="wallet-list">
         <li class="wallet-item" v-for="wallet in wallet_list" :key="wallet.address">
-          <div class="wallet-wrapper" @click="processTransaction(wallet)">
+          <div class="wallet-wrapper">
             <h1 class="wallet-address">
               <i class="icon iconfont icon-key"></i>
               <span v-text="wallet.address"></span>
+                <img src="../assets/copy.png" class="icon icon-address-copy"  @click="processTransaction(wallet)"/>
               <p>
               <span class="token-wrapper" v-for="(token, index) in wallet.balances" v-bind:key="index">
                 <span>{{token.balance}} {{token.symbol}}</span>
@@ -90,7 +92,7 @@
               </p>
             </h1>
           </div>
-          <a href="javascript:;" class="export" @click="proceedExport(wallet)">备份钱包(导出助记词)</a>
+          <button class="button" @click="proceedExport(wallet)">备份钱包(导出助记词)</button>
         </li>
       </ul>
     </div>
@@ -216,7 +218,7 @@ export default {
                             if(displayError)_this.$Message.error("获取余额失败");
                             return
                         }
-                        console.log(_wallet.address);
+                        //console.log(_wallet.address);
                         token.balance = web3Utils.toRealAmount(result);
                         wallet.balances[i] = token;
                     })
@@ -228,7 +230,7 @@ export default {
                             if(displayError)_this.$Message.error("获取余额失败");
                             return
                         }
-                        console.log(_wallet.address+", "+balance.toString());
+                        //console.log(_wallet.address+", "+balance.toString());
                         token.balance = web3Utils.toRealAmount(
                             balance,
                             token.decimals
@@ -243,7 +245,7 @@ export default {
             return
         }
         else{
-            setTimeout(this.updateBalances, 10000);
+            setTimeout(function() { _this.updateBalances() }, 10000);
         }
     }
     ,
@@ -377,7 +379,13 @@ export default {
     exportWallet() {
       let _this = this,
         password = this.user_password,
-        keystore = _.find(this.wallet_list, this.current_wallet).keystore;
+        keystore = undefined
+        //_.find(this.wallet_list, this.current_wallet).keystore; //_.find causes problems in offline mode
+        for(var i=0;i<this.wallet_list.length;i++){
+          if(this.wallet_list[i].address == this.current_wallet.address){
+              keystore = this.wallet_list[i].keystore
+          }
+        }
 
       keystore.keyFromPassword(password, function(err, pwDerivedKey) {
         if (err) {
@@ -393,8 +401,41 @@ export default {
         }
       });
     },
+    showtooltip(tip, e){
+
+      var tooltip = document.createElement('div')
+      tooltip.style.cssText =
+          'position:absolute; background:black; color:white; padding:4px;z-index:10000;'
+          + 'border-radius:2px; font-size:12px;box-shadow:3px 3px 3px rgba(0,0,0,.4);'
+          + 'opacity:0;transition:opacity 0.3s'
+      tooltip.innerHTML = tip || '已复制!'
+      document.body.appendChild(tooltip)
+
+        var evt = e || event
+
+        tooltip.style.left = evt.pageX - 10 + 'px'
+        tooltip.style.top = evt.pageY + 15 + 'px'
+        tooltip.style.opacity = 1
+        setTimeout(function(){
+            tooltip.style.opacity = 0
+            document.body.removeChild(tooltip)
+        }, 500)
+    },
     processTransaction(wallet) {
-      this.$root.globalData.current_wallet = _.cloneDeep(wallet);
+      //this.$root.globalData.current_wallet = _.cloneDeep(wallet);
+
+        function selectElementText(el){
+            var range = document.createRange() // create new range object
+            range.selectNodeContents(el) // set range to encompass desired element text
+            var selection = window.getSelection() // get Selection object from currently user selected text
+            selection.removeAllRanges() // unselect any user selected text (if any)
+            selection.addRange(range) // add range to Selection object to select it
+        }
+
+        selectElementText(event.target.parentElement.children[1]);
+        document.execCommand("copy");
+
+        this.showtooltip("复制成功!")
       //window.location.hash = "send";
     }
   }
@@ -432,6 +473,11 @@ export default {
         font-size: 20px;
       }
     }
+      .icon-address-copy{
+          width:20px;
+          height:20px;
+          margin-top:5px;
+      }
     .export {
       text-align: right;
       width: 120px;

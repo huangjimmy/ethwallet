@@ -8,10 +8,15 @@
           当前钱包：
           <i-select v-model="current_wallet.address" class="wallet-source" placeholder="选择钱包" @on-change="changeReceiveWallet">
             <Option v-for="item in wallet_list" :value="item.address" :key="item.address">{{ item.address }}</Option>
-          </i-select>
+          </i-select><img src="../assets/copy.png" class="icon icon-address-copy"  @click="copyAddress()"/>
         </div>
         <div class="receive-wallet-qrcode">
-          收款二维码：<p class="qrcode" id="qrcode"></p>
+          收款二维码：
+            <span id="selected_address"></span>
+            <p class="qrcode" id="qrcode"></p>
+            <div style="width:200px;text-align:center;background:#A5A5A5;height:24px;" class="qrcode" v-show="qrcode.length > 0">
+                <a id="qrcode_download" href="" class="icon icon-address-copy"><img src="../assets/download.png" class="icon" style="width:20px;height:20px;"/></a>
+            </div>
         </div>
       </div>
     </div>
@@ -83,9 +88,20 @@ export default {
     },
     generateQRCode(text) {
       let img_path = "./assets/logo.png",
-        _qrcode = document.querySelector("#qrcode");
+
+      _qrcode = document.querySelector("#qrcode");
       _qrcode.innerHTML = "";
       _qrcode.appendChild(kjua({ text: text }));
+
+      var _selectedAddress = document.querySelector('#selected_address');
+      _selectedAddress.innerHTML = text;
+
+      var _qrcode_download = document.querySelector("#qrcode_download");
+      _qrcode_download.download = text+".txt";
+      _qrcode_download.href = "data:text/txt,"+text;
+
+      this.qrcode = text;
+
     },
     changeReceiveWallet(address) {
       let _this = this,
@@ -134,7 +150,41 @@ export default {
     onWalletChange() {},
     onTokenChange(value) {
       this.token = value;
-    }
+    },
+      showtooltip(tip, e){
+
+          var tooltip = document.createElement('div')
+          tooltip.style.cssText =
+              'position:absolute; background:black; color:white; padding:4px;z-index:10000;'
+              + 'border-radius:2px; font-size:12px;box-shadow:3px 3px 3px rgba(0,0,0,.4);'
+              + 'opacity:0;transition:opacity 0.3s'
+          tooltip.innerHTML = tip || '已复制!'
+          document.body.appendChild(tooltip)
+
+          var evt = e || event
+
+          tooltip.style.left = evt.pageX - 10 + 'px'
+          tooltip.style.top = evt.pageY + 15 + 'px'
+          tooltip.style.opacity = 1
+          setTimeout(function(){
+              tooltip.style.opacity = 0
+              document.body.removeChild(tooltip)
+          }, 500)
+      },
+      copyAddress(){
+          function selectElementText(el){
+              var range = document.createRange() // create new range object
+              range.selectNodeContents(el) // set range to encompass desired element text
+              var selection = window.getSelection() // get Selection object from currently user selected text
+              selection.removeAllRanges() // unselect any user selected text (if any)
+              selection.addRange(range) // add range to Selection object to select it
+          }
+
+          selectElementText(document.querySelector("#selected_address"));
+          document.execCommand("copy");
+
+          this.showtooltip("复制成功!")
+      }
   }
 };
 </script>
@@ -149,6 +199,13 @@ export default {
     font-size: 16px;
     width: 45%;
   }
+
+    .icon-address-copy{
+        width:20px;
+        height:20px;
+        margin-top:15px;
+        margin-left: 5px;
+    }
   .wallet-source,
   .wallet-target,
   .transfer {
