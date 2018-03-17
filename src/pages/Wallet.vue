@@ -98,7 +98,7 @@
 </template>
 
 <script>
-import lightwallet from "eth-lightwallet";
+import lightwallet from "eth-lightwallet-jh";
 import HookedWeb3Provider from "hooked-web3-provider";
 import _ from "lodash";
 import dbUtils from "../dbUtils";
@@ -118,6 +118,7 @@ export default {
   },
   mounted() {
     this.loadWallet();
+    setTimeout(this.updateBalances, 15000)
   },
   methods: {
     openModal(modalname) {
@@ -198,6 +199,54 @@ export default {
         }
       );
     },
+    updateBalances(displayError){
+        var _this = this;
+        web3 = web3Utils.getWeb3()
+        this.$root.currentView == 'wallet'  && _this.wallet_list && _this.wallet_list.map(function (_wallet) {
+            _wallet.balances && _wallet.balances.map(function (_token, i) {
+                var token = _token;
+                var wallet = _wallet;
+
+                if(token == null || typeof(token) == 'undefined')return;
+
+                if(token.address == "ETH"){
+                    web3.eth.getBalance(_wallet.address, function (err, result) {
+                        if (err) {
+                            reportUtils.report(e);
+                            if(displayError)_this.$Message.error("获取余额失败");
+                            return
+                        }
+                        console.log(_wallet.address);
+                        token.balance = web3Utils.toRealAmount(result);
+                        wallet.balances[i] = token;
+                    })
+                }
+                else{
+                    token.contract && token.contract.balanceOf("" + _wallet.address, function (err, balance) {
+                        if(err){
+                            reportUtils.report(e);
+                            if(displayError)_this.$Message.error("获取余额失败");
+                            return
+                        }
+                        console.log(_wallet.address+", "+balance.toString());
+                        token.balance = web3Utils.toRealAmount(
+                            balance,
+                            token.decimals
+                        )
+                        wallet.balances[i] = token;
+                    });
+                }
+            })
+        });
+
+        if(displayError){
+            return
+        }
+        else{
+            setTimeout(this.updateBalances, 10000);
+        }
+    }
+    ,
     getBalance(wallet) {
       web3Utils.setWebProvider(wallet.keystore);
 
@@ -215,24 +264,40 @@ export default {
       try {
 
 
-          _token.balance = web3Utils.toRealAmount(
-              web3.eth.getBalance(_wallet.address)
-          );
-
-          _wallet.balances.push(_token);
-
-          _.forEach(erc20tokens, token => {
-              let balance = token.contract.balanceOf("" + _wallet.address);
-              _token = {
-                  address: token.address,
-                  symbol: token.symbol,
-                  balance: parseFloat(web3Utils.toRealAmount(
-                      balance,
-                      token.decimals
-                  ))
-              };
+          web3.eth.getBalance(_wallet.address, function (err, result) {
+              if(err){
+                  reportUtils.report(e);
+                  _this.$Message.error("获取余额失败");
+                  return
+              }
+              _token.balance = web3Utils.toRealAmount(result);
               _wallet.balances.push(_token);
-          });
+
+              _.forEach(erc20tokens, token => {
+                  token.contract.balanceOf("" + _wallet.address, function (err, balance) {
+                      if(err){
+                          reportUtils.report(e);
+                          _this.$Message.error("获取余额失败");
+                          return
+                      }
+
+                      var _token = {
+                          address: token.address,
+                          symbol: token.symbol,
+                          balance: web3Utils.toRealAmount(
+                              balance,
+                              token.decimals
+                          ),
+                          decimals: token.decimals,
+                          contract: token.contract
+                      };
+                      _wallet.balances.push(_token);
+                  });
+              });
+          })
+          // _token.balance = web3Utils.toRealAmount(
+          //     web3.eth.getBalance(_wallet.address)
+          // );
       }
       catch (e) {
           reportUtils.report(e);
@@ -330,7 +395,7 @@ export default {
     },
     processTransaction(wallet) {
       this.$root.globalData.current_wallet = _.cloneDeep(wallet);
-      window.location.hash = "transaction";
+      //window.location.hash = "send";
     }
   }
 };

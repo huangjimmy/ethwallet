@@ -45,11 +45,26 @@
             <i-input type="password" v-model="user_password" placeholder="Type your password" style="width: 100%"></i-input>
         </div>
         <div slot="footer" style="text-align:center;">
-            <i-button class="button" @click="transfer" :loading="modal_loading" >确定</i-button>
+            <i-button class="button" @click="transferOffline" :loading="modal_loading" >生成交易数据</i-button>
+            <i-button class="button" @click="transfer" :loading="modal_loading" >立即提交</i-button>
             <i-button class="button" @click="closeModal()">关闭</i-button>
         </div>
       </Modal>
     </div>
+      <div class="content-wrapper" v-show="qrcode.length > 0">
+          <div class="receive-wallet-wrapper">
+              <div class="receive-wallet-selector">
+                  <div>
+                      <p>&nbsp;</p>
+                      <p>交易数据:</p>
+                      <p style="word-break: break-all;margin: 15px;" v-text="qrcode"></p>
+                  </div>
+              </div>
+              <div class="receive-wallet-qrcode">
+                  交易数据：<p class="qrcode" id="qrcode"></p>
+              </div>
+          </div>
+      </div>
   </div>
 </template>
 
@@ -83,12 +98,14 @@ export default {
   computed: {
     token: function() {
       let _this = this,
-        _token = _.find(this.current_wallet.balances, { address: _this.token_address });
+        //_token = _.find(this.current_wallet.balances, { address: _this.token_address });
+        _token = this.current_wallet && this.current_wallet.balances?this.current_wallet.balances.filter(x=>{return x.address == _this.token_address;})[0]:undefined
       return _token ? _token.symbol : "";
     },
     max: function() {
       let _this = this,
-        _token = _.find(this.current_wallet.balances, { value: _this.token_address });
+        //_token = _.find(this.current_wallet.balances, { value: _this.token_address });
+        _token = this.current_wallet && this.current_wallet.balances?this.current_wallet.balances.filter(x=>{return x.address == _this.token_address;})[0]:undefined
       return _token ? _token.balance : 0;
     },
     min: function() {
@@ -124,7 +141,6 @@ export default {
           _.find(this.$root.globalData.wallet_list, ["address", address])
         );
       this.$Loading.start();
-
       current_wallet.keystore.passwordProvider = function(callback) {
         callback(null,_this.user_password);
       };
@@ -157,10 +173,10 @@ export default {
         _token = {
           address: token.address,
           symbol: token.symbol,
-          balance:parseFloat(web3Utils.toRealAmount(
+          balance:web3Utils.toRealAmount(
             balance,
             token.decimals
-          ))
+          )
         };
         _wallet.balances.push(_token);
       });    
@@ -168,6 +184,8 @@ export default {
       _this.wallet_list[
         _.findIndex(_this.wallet_list, { address: wallet.address })
       ] = _.cloneDeep(_this.current_wallet);
+
+      _this.$root.globalData.wallet_list = _this.wallet_list;
     },
     proceedTranfer(){
       var _this = this,
@@ -200,6 +218,12 @@ export default {
           _this.modal_loading = false;
           _this.closeModal();
           _this.$Message.success(`提交成功：${txhash}`);
+          _this.getBalance(this.current_wallet);
+          setTimeout(function () {
+              window.location.hash = "wallet";
+              window.location.reload();
+          },1000)
+
         })
         .catch(err => {
           _this.$Loading.error();
@@ -210,6 +234,9 @@ export default {
     },
     doTransfer(resolve, reject) {
       var _this = this;
+
+      this.qrcode = "";
+
       return new Promise((resolve, reject) => {
         let web3 = web3Utils.getWeb3(),
           erc20tokens = web3Utils.getErc20Tokens(),
@@ -226,14 +253,25 @@ export default {
             value = parseFloat(valueEth) * 1.0e18;
             gasPrice = 18000000000;
             gas = 50000;
-            web3.eth.sendTransaction(
-              {
+            var txn = {
                 from: fromAddr,
                 to: toAddr,
                 value: value,
                 gasPrice: gasPrice,
                 gas: gas
-              },
+            }
+
+            gas = web3.eth.estimateGas(txn);
+            txn = {
+                  from: fromAddr,
+                  to: toAddr,
+                  value: value,
+                  gasPrice: gasPrice,
+                  gas: gas
+              }
+
+            web3.eth.sendTransaction(
+              txn,
               function(err, txhash) {
                 if (err) {
                   reject && reject(err);
@@ -280,6 +318,106 @@ export default {
         }
       });
     },
+      transferOffline() {
+          var _this = this;
+          this.qrcode = "";
+
+          _this.$Loading.start();
+          _this.modal_loading = true;
+
+          this.doTransferOffline()
+              .then(txhash => {
+                  _this.$Loading.finish();
+                  _this.modal_loading = false;
+                  _this.closeModal();
+                  _this.qrcode = txhash;
+                  _this.generateQRCode(txhash);
+              })
+              .catch(err => {
+                  _this.$Loading.error();
+                  _this.modal_loading = false;
+                  _this.closeModal();
+                  _this.$Message.error("提交失败");
+              });
+      },
+      doTransferOffline(resolve, reject) {
+          var _this = this;
+          return new Promise((resolve, reject) => {
+              let web3 = web3Utils.getWeb3(),
+                  erc20tokens = web3Utils.getErc20Tokens(),
+                  fromAddr = this.current_wallet.address,
+                  toAddr = this.target_address,
+                  valueEth = this.transfer_token,
+                  value,
+                  gasPrice,
+                  gas,
+                  args = [];
+
+              try {
+                  if (this.token_address === "ETH") {
+                      value = parseFloat(valueEth) * 1.0e18;
+                      gasPrice = 18000000000;
+                      gas = 50000;
+                      var txn = {
+                          from: fromAddr,
+                          to: toAddr,
+                          value: value,
+                          gasPrice: gasPrice,
+                          gas: gas
+                      }
+
+                      this.current_wallet.keystore.signTransaction(txn, function(err, result){
+                          if (err) {
+                              reject && reject(err);
+                          } else {
+                              resolve && resolve(result);
+                          }
+                      })
+
+                  } else {
+                      let erc20token = _.find(erc20tokens, {
+                              address: this.token_address
+                          }),
+                          contract = erc20token.contract,
+                          decimals = erc20token.decimals;
+
+                      value = new BigNumber(valueEth + "e+" + decimals);
+                      gasPrice = 21000000000;
+
+                      web3.eth.defaultAccount = fromAddr;
+
+                      gas = 50000;
+
+                      var data = contract.transfer.getData(
+                          toAddr,
+                          value.toString());
+                      var txn = {
+                          from: fromAddr,
+                          value: "0",
+                          gasPrice: gasPrice,
+                          gas: gas,
+                          data: data,
+                      }
+
+                      this.current_wallet.keystore.signTransaction(txn, function(err, result){
+                          if (err) {
+                              reject && reject(err);
+                          } else {
+                              resolve && resolve(result);
+                          }
+                      })
+                  }
+              } catch (err) {
+                  reject && reject(err);
+              }
+          });
+      },
+      generateQRCode(text) {
+          let img_path = "./assets/logo.png",
+              _qrcode = document.querySelector("#qrcode");
+          _qrcode.innerHTML = "";
+          _qrcode.appendChild(kjua({ text: text }));
+      },
     onWalletChange() {},
     onTokenChange(value) {
       this.token = value;

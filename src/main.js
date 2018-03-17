@@ -1,6 +1,6 @@
 import Vue from "vue";
 import _ from "lodash";
-import lightwallet from "eth-lightwallet";
+import lightwallet from "eth-lightwallet-jh";
 import iView from "iview";
 import routes from "./routes";
 import MainLayout from "./layouts/MainLayout.vue";
