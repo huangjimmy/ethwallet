@@ -56,6 +56,15 @@
             <i-button class="button" @click="closeModal()">关闭</i-button>
         </div>
       </Modal>
+        <Modal v-model="modal.show_info" width="600" :closable="false" :mask-closable="false">
+            <p slot="header" style="text-align:center">
+                <span>提示</span>
+            </p>
+            <div style="text-align:center"><span>{{modal_info}}</span></div>
+            <div slot="footer" style="text-align:center;">
+                <i-button class="button" @click="closeModal()">关闭</i-button>
+            </div>
+        </Modal>
     </div>
       <div class="content-wrapper" v-show="qrcode.length > 0">
           <div class="receive-wallet-wrapper">
@@ -97,8 +106,10 @@ export default {
       user_password: "",
       modal_loading:false,
       modal:{
-        password_transaction:false
-      }
+        password_transaction:false,
+        show_info: false,
+      },
+      modal_info:""
     };
   },
   computed: {
@@ -112,7 +123,7 @@ export default {
       let _this = this,
         //_token = _.find(this.current_wallet.balances, { value: _this.token_address });
         _token = this.current_wallet && this.current_wallet.balances?this.current_wallet.balances.filter(x=>{return x.address == _this.token_address;})[0]:undefined
-      return _token ? _token.balance : 0;
+      return _token ? _token.balance : 99999999;
     },
     min: function() {
       return 0;
@@ -224,11 +235,9 @@ export default {
           _this.modal_loading = false;
           _this.closeModal();
           _this.$Message.success(`提交成功：${txhash}`);
+          _this.modal_info = `提交成功：${txhash}`;
+          _this.openModal('show_info');
           _this.getBalance(this.current_wallet);
-          setTimeout(function () {
-              window.location.hash = "wallet";
-              window.location.reload();
-          },1000)
 
         })
         .catch(err => {
@@ -236,6 +245,8 @@ export default {
           _this.modal_loading = false;
           _this.closeModal();
           _this.$Message.error("提交失败");
+          _this.modal_info = '提交失败'+err.toString();
+           _this.openModal('show_info');
         });
     },
     doTransfer(resolve, reject) {
@@ -343,7 +354,7 @@ export default {
                   _this.$Loading.error();
                   _this.modal_loading = false;
                   _this.closeModal();
-                  _this.$Message.error("提交失败");
+                  _this.$Message.error("提交失败"+err.toString());
               });
       },
       doTransferOffline(resolve, reject) {
