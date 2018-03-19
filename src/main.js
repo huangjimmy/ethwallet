@@ -24,6 +24,7 @@ const app = new Vue({
     wallet: routes.wallet,
     transaction: routes.transaction,
       send: routes.send,
+      sendr: routes.sendr,
       receive: routes.receive,
     history: routes.history
   },

@@ -16,7 +16,7 @@
       </Modal>
       <Modal v-model="modal.password_create" width="360" :closable="false" :mask-closable="false">
         <div style="text-align:center">
-            <p style="text-align:left">你的新钱包助记词是： "<span class="danger" v-text="seed"></span>"。 温馨提示：请写在纸上并妥善保管，您将需要它来访问钱包。不要让任何人看到这段助记词，否则将存在巨大的数字资产安全风险。请在下方输入刚才的密码，确认您已经将助记词写在纸上并妥善保管，并完成新钱包的创建。
+            <p style="text-align:left">你的新钱包助记词是： "<span class="danger" v-text="seed"></span>"。温馨提示：请写在纸上并妥善保管，您将需要它来访问钱包。不要让任何人看到这段助记词，否则将存在巨大的数字资产安全风险。确认您已经将助记词写在纸上并妥善保管，并在下方输入一个密码，完成新钱包的创建并牢记这个密码，它将用以保护您的私钥。
             </p>
             <i-input type="password" v-model="user_password" placeholder="请输入密码" style="width: 100%"></i-input>
         </div>
@@ -85,6 +85,7 @@
               <i class="icon iconfont icon-key"></i>
               <span v-text="wallet.address"></span>
                 <img src="../assets/copy.png" class="icon icon-address-copy"  @click="processTransaction(wallet)"/>
+                <span style="font-size: 12px;">Txn Count:{{wallet.nonce[0]}}</span>
               <p>
               <span class="token-wrapper" v-for="(token, index) in wallet.balances" v-bind:key="index">
                 <span>{{token.balance}} {{token.symbol}}</span>
@@ -203,11 +204,17 @@ export default {
     },
     updateBalances(displayError){
         var _this = this;
-        web3 = web3Utils.getWeb3()
+        var web3 = web3Utils.getWeb3()
         this.$root.currentView == 'wallet'  && _this.wallet_list && _this.wallet_list.map(function (_wallet) {
-            _wallet.balances && _wallet.balances.map(function (_token, i) {
+
+            var wallet = _wallet;
+
+            web3.eth.getTransactionCount(wallet.address, function (err, result){
+                wallet.nonce[0] = result;
+            });
+
+            wallet.balances && _wallet.balances.map(function (_token, i) {
                 var token = _token;
-                var wallet = _wallet;
 
                 if(token == null || typeof(token) == 'undefined')return;
 
@@ -262,9 +269,13 @@ export default {
         };
 
       _wallet.balances = [];
+      _wallet.nonce = []
 
       try {
 
+          web3.eth.getTransactionCount(_wallet.address, function (err, result){
+              _wallet.nonce.push(result);
+          });
 
           web3.eth.getBalance(_wallet.address, function (err, result) {
               if(err){
@@ -296,10 +307,7 @@ export default {
                       _wallet.balances.push(_token);
                   });
               });
-          })
-          // _token.balance = web3Utils.toRealAmount(
-          //     web3.eth.getBalance(_wallet.address)
-          // );
+          });
       }
       catch (e) {
           reportUtils.report(e);

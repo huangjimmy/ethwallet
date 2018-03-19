@@ -51,11 +51,24 @@
             <i-input type="password" v-model="user_password" placeholder="请输入密码" style="width: 100%"></i-input>
         </div>
         <div slot="footer" style="text-align:center;">
-            <i-button class="button" @click="transferOffline" :loading="modal_loading" >生成交易数据</i-button>
-            <i-button class="button" @click="transfer" :loading="modal_loading" >立即提交</i-button>
+            <i-button class="button" @click="transferOffline" :loading="modal_loading" >离线交易</i-button>
+            <i-button class="button" @click="transfer" :loading="modal_loading" >现在发送</i-button>
             <i-button class="button" @click="closeModal()">关闭</i-button>
         </div>
       </Modal>
+        <Modal v-model="modal.input_nonce" width="360" :closable="false" :mask-closable="false">
+            <p slot="header" style="text-align:center">
+                <span>请输入nonce:</span>
+            </p>
+            <div style="text-align:center">
+                <span>nonce应该等于转出地址的累计交易数，如果您已联网，应用将自动获取nonce</span>
+                <i-input type="text" v-model="current_wallet.custom_nonce" placeholder="请输入nonce" style="width: 100%"></i-input>
+            </div>
+            <div slot="footer" style="text-align:center;">
+                <i-button class="button" @click="transferOffline2" :loading="modal_loading" >生成交易</i-button>
+                <i-button class="button" @click="closeModal()">关闭</i-button>
+            </div>
+        </Modal>
         <Modal v-model="modal.show_info" width="600" :closable="false" :mask-closable="false">
             <p slot="header" style="text-align:center">
                 <span>提示</span>
@@ -66,11 +79,11 @@
             </div>
         </Modal>
     </div>
+      <Modal v-model="modal.show_offline_txn" width="600" :closable="false" :mask-closable="false">
       <div class="content-wrapper" v-show="qrcode.length > 0">
           <div class="receive-wallet-wrapper">
-              <div class="receive-wallet-selector">
+              <div class="receive-wallet-wrapper">
                   <div>
-                      <p>&nbsp;</p>
                       <p>交易数据:</p>
                       <p style="word-break: break-all;margin: 15px;" v-text="qrcode"></p>
                   </div>
@@ -80,6 +93,10 @@
               </div>
           </div>
       </div>
+      <div slot="footer">
+          <Button type="info" size="medium" :loading="modal_loading" @click="closeModal();">好</Button>
+      </div>
+      </Modal>
   </div>
 </template>
 
@@ -108,6 +125,7 @@ export default {
       modal:{
         password_transaction:false,
         show_info: false,
+        show_offline_txn: false,
       },
       modal_info:""
     };
@@ -340,22 +358,35 @@ export default {
           this.qrcode = "";
 
           _this.$Loading.start();
-          _this.modal_loading = true;
+          _this.modal_loading = false;
 
-          this.doTransferOffline()
-              .then(txhash => {
-                  _this.$Loading.finish();
-                  _this.modal_loading = false;
-                  _this.closeModal();
-                  _this.qrcode = txhash;
-                  _this.generateQRCode(txhash);
-              })
-              .catch(err => {
-                  _this.$Loading.error();
-                  _this.modal_loading = false;
-                  _this.closeModal();
-                  _this.$Message.error("提交失败"+err.toString());
-              });
+          try{
+              let web3 = web3Utils.getWeb3();
+              _this.current_wallet.nonce = web3.eth.getTransactionCount(_this.current_wallet.address);
+          }catch(err){}
+
+          _this.current_wallet.custom_nonce = _this.current_wallet.nonce;
+
+          _this.openModal("input_nonce");
+      },
+      transferOffline2(){
+        var _this = this;
+        _this.doTransferOffline()
+          .then(txhash => {
+              _this.$Loading.finish();
+              _this.modal_loading = false;
+              _this.closeModal();
+              _this.qrcode = txhash;
+              _this.generateQRCode(txhash);
+              _this.openModal('show_offline_txn');
+          })
+          .catch(err => {
+              _this.$Loading.error();
+              _this.modal_loading = false;
+              _this.closeModal();
+              _this.$Message.error("提交失败"+err.toString());
+              console.error(err)
+          });
       },
       doTransferOffline(resolve, reject) {
           var _this = this;
@@ -376,6 +407,7 @@ export default {
                       gasPrice = 18000000000;
                       gas = 50000;
                       var txn = {
+                          nonce: _this.current_wallet.custom_nonce,
                           from: fromAddr,
                           to: toAddr,
                           value: value,
@@ -409,6 +441,7 @@ export default {
                           toAddr,
                           value.toString());
                       var txn = {
+                          nonce: _this.current_wallet.custom_nonce,
                           from: fromAddr,
                           value: "0",
                           gasPrice: gasPrice,
@@ -524,7 +557,7 @@ export default {
   }
   .receive-wallet-wrapper {
     font-size: 16px;
-    color: #ccc;
+    color: #222222;
     .receive-wallet-qrcode {
       margin-top: 30px;
       .qrcode {

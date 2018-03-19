@@ -36,6 +36,12 @@
             <span class="menu-item-text">交易历史</span>
           </v-link>
         </li>
+          <li class="menu-item" v-bind:class="{'menu-item-selected': this.$root.currentView == 'sendr','menu-item-normal': this.$root.currentView != 'sendr'}">
+              <v-link href="/sendr" class="menu-item-link">
+                  <i class="icon iconfont icon-trade"></i>
+                  <span class="menu-item-text">已签名交易发送</span>
+              </v-link>
+          </li>
       </ul>
     </div>
     <div class="content">

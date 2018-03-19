@@ -173,15 +173,6 @@ function defaultMenuChs(app, shell) {
                 },
             ]
         },
-        {
-            role: '帮助',
-            submenu: [
-                {
-                    label: 'Learn More',
-                    click: function() { shell.openExternal('http://electron.atom.io') }
-                },
-            ]
-        },
     ];
 
     if (process.platform === 'darwin') {
