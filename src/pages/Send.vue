@@ -211,7 +211,8 @@ export default {
           balance:web3Utils.toRealAmount(
             balance,
             token.decimals
-          )
+          ),
+          decimals: token.decimals,
         };
         _wallet.balances.push(_token);
       });    
@@ -443,6 +444,7 @@ export default {
                       var txn = {
                           nonce: _this.current_wallet.custom_nonce,
                           from: fromAddr,
+                          to: contract.address,
                           value: "0",
                           gasPrice: gasPrice,
                           gas: gas,

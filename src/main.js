@@ -5,9 +5,15 @@ import iView from "iview";
 import routes from "./routes";
 import MainLayout from "./layouts/MainLayout.vue";
 import dbUtils from "./dbUtils";
-import web3Utils from "./web3Utils";
 
 Vue.use(iView);
+
+if(location.href.startsWith("file://")) {
+    require('electron-context-menu')({
+        showInspectElement: false,
+        labels: {"cut": "剪切", "copy": "复制", "save": "保存", "paste": "粘贴", "copyLink": "复制链接"}
+    });
+}
 
 const app = new Vue({
   el: "#app",

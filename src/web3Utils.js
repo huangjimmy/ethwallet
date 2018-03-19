@@ -33,7 +33,7 @@ function setWebProvider(ks){
   erc20tokens = erc20addrs.map(function (addr) {
     var contract = ERC20Contract.at(addr)
       if(addr == CPS_TEST_ADDR){
-          return {"address":addr, "contract": contract, "decimals": 8, "symbol": "CPSTEST" };
+          return {"address":addr, "contract": contract, "decimals": 8, "symbol": "CPSTest" };
       }
     return {"address":addr, "contract": contract, "decimals": contract.decimals.call(), "symbol": contract.symbol.call() };
   })

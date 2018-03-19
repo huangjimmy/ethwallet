@@ -231,6 +231,15 @@ export default {
                     })
                 }
                 else{
+                    if(token.contract == null || typeof(token.contract) == 'undefined'){
+                        let
+                            erc20tokens = web3Utils.getErc20Tokens(),
+                            erc20token = _.find(erc20tokens, {
+                                address: token.address
+                            });
+                        token.contract = erc20token.contract;
+                        token.decimals = erc20token.decimals;
+                    }
                     token.contract && token.contract.balanceOf("" + _wallet.address, function (err, balance) {
                         if(err){
                             reportUtils.report(e);
@@ -279,7 +288,7 @@ export default {
 
           web3.eth.getBalance(_wallet.address, function (err, result) {
               if(err){
-                  reportUtils.report(e);
+                  reportUtils.report(err);
                   _this.$Message.error("获取余额失败");
                   return
               }
@@ -289,7 +298,7 @@ export default {
               _.forEach(erc20tokens, token => {
                   token.contract.balanceOf("" + _wallet.address, function (err, balance) {
                       if(err){
-                          reportUtils.report(e);
+                          reportUtils.report(err);
                           _this.$Message.error("获取余额失败");
                           return
                       }
@@ -308,6 +317,8 @@ export default {
                   });
               });
           });
+
+          this.updateWallet(wallet);
       }
       catch (e) {
           reportUtils.report(e);
