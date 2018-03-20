@@ -79,15 +79,16 @@
             </div>
         </Modal>
     </div>
-      <Modal v-model="modal.show_offline_txn" width="600" :closable="false" :mask-closable="false">
+      <Modal v-model="modal.show_offline_txn" width="900" :closable="false" :mask-closable="false">
       <div class="content-wrapper" v-show="qrcode.length > 0">
           <div class="receive-wallet-wrapper">
-              <div class="receive-wallet-wrapper">
-                  <div>
-                      <p>交易数据:</p>
-                      <p style="word-break: break-all;margin: 15px;" v-text="qrcode"></p>
-                  </div>
+              <div>
+                  <p>交易数据:</p>
+                  <p style="word-break: break-all;margin: 15px; font-size: 14px;" v-text="qrcode"></p>
+                  <p>请保存上面的签名，在联网的设备下，粘贴至已签名交易发送功能处，即可完成一次离线交易。</p>
               </div>
+          </div>
+          <div class="receive-wallet-wrapper">
               <div class="receive-wallet-qrcode">
                   交易数据：<p class="qrcode" id="qrcode"></p>
               </div>

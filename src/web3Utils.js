@@ -6,9 +6,10 @@ const web3 = new Web3();
 let erc20tokens;
 
 const CPS_TEST_ADDR = "0x0E3E4BfD5a2572c1E0475029D43Ac0D274466017";
+const CPS_PROD_ADDR = "0xf239fAb41De78533FA974B74d7605f1E68F8772e";
 
 const erc20addrs = [
-    "0x0E3E4BfD5a2572c1E0475029D43Ac0D274466017",
+    "0xf239fAb41De78533FA974B74d7605f1E68F8772e",
   //"0xFFAB690958a463EB859B6348279A2F5FDdB8Eba1",
   //"0x60B6a6420e6295eaa7dEa24eb780eC567205ee05",
 ];
@@ -22,7 +23,7 @@ const httpTestBaseUrl = `http://ropsten.etherscan.io/api?apikey=${apiKey}`;
 
 function setWebProvider(ks){
   var web3Provider = new HookedWeb3Provider({
-    host: "http://47.88.61.217:8080",
+    host: "http://47.254.24.199:8080",
     transaction_signer: ks
   });
 
@@ -34,6 +35,9 @@ function setWebProvider(ks){
     var contract = ERC20Contract.at(addr)
       if(addr == CPS_TEST_ADDR){
           return {"address":addr, "contract": contract, "decimals": 8, "symbol": "CPSTest" };
+      }
+      if(addr == CPS_PROD_ADDR){
+          return {"address":addr, "contract": contract, "decimals": 8, "symbol": "CPS" };
       }
     return {"address":addr, "contract": contract, "decimals": contract.decimals.call(), "symbol": contract.symbol.call() };
   })
