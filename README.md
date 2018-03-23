@@ -67,4 +67,4 @@ Build package and upload
 ./ci.sh
 ```
 
-Please change upload.py so that packaged executables are upload to OSS of your own.
+ci.sh call upload.py to upload files to OSS, you need to change OSS configuration in upload.py so that packaged executables are upload to OSS of your own.
