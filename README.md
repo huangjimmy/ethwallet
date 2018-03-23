@@ -37,7 +37,7 @@ sudo apt-get update && sudo apt-get install yarn
 
 # Install dependencies
 ``` bash
-yarn install
+yarn add --dev electron-installer-windows
 ```
 # Serve with hot reload at localhost:8080
 ``` bash
@@ -59,7 +59,7 @@ It may take a while. When it is done, you will see executables in ./outapp/ dire
 
 Install prerequisite
 ```bash
-
+yarn add --dev 
 ```
 
 Build package and upload
