@@ -49,8 +49,22 @@ yarn start
 ```
 # Package application
 ``` bash
-yarn build && yarn predeploy &&  electron-packager . CPSWallet --asar=true  --platform=win32,darwin,linux --arch=x64  --overwrite --out=./outapp/ --no-prune
+yarn build && yarn predeploy &&  electron-packager . CPSWallet --asar=true  --platform=win32,darwin,linux --arch=x64  --overwrite --out=./outapp/ --no-prune  --icon CPSWALLETLOGO
 
 ```
 
 It may take a while. When it is done, you will see executables in ./outapp/ directory.
+
+# Package and upload to Aliyun OSS
+
+Install prerequisite
+```bash
+
+```
+
+Build package and upload
+```bash
+./ci.sh
+```
+
+Please change upload.py so that packaged executables are upload to OSS of your own.

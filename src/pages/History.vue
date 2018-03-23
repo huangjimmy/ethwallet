@@ -1,9 +1,9 @@
 <template>
   <div>
-    <div class="btn-wrapper">
+    <!-- <div class="btn-wrapper">
       <Button class="button" @click="changeNet('TEST')" v-show="net==='PROD'">切换到测试网</Button>
       <Button class="button" @click="changeNet('PROD')" v-show="net==='TEST'">切换到正式网</Button>
-    </div>
+    </div> -->
     <div class="filter-wrapper">
       <i-input v-model="keyword" class="keyword" placeholder="地址">
         <i-select v-model="address" slot="append" class="transfer-wallet-selector" placeholder="选择钱包" @on-change="onWalletChange">
@@ -17,14 +17,14 @@
       <ul class="transaction-list">
         <li class="transaction-item" v-for="transaction in filter_list" v-bind:key="transaction.hash">
           <div class="transaction-wrapper">
-            <h1 class="transaction-title">TRANSACTION</h1>
+            <h3 class="transaction-title" v-text="transaction.hash"></h3>
             <p class="transaction-sub">
-              <span v-text="transaction.from"></span> => <span v-text="transaction.to"></span>
+              <span v-text="transaction.from"></span> => <span v-text="transaction.to?transaction.to:'创建合约('+transaction.contractAddress+')'"></span>
             </p>
           </div>
           <div class="transaction-token-wrapper">
-            <span class="token-amount" v-text="transaction.value"></span>
-            <span class="token">{{ transaction.contractAddress | translateAddressToToken }}</span>
+            <span class="token-amount" v-text="toRealAmount(transaction.value, 18)"></span>
+            <span class="token">ETH</span>
           </div>
           <div class="transaction-time-wrapper">{{transaction.timeStamp | formatDate}}</div>
         </li>
@@ -42,7 +42,7 @@ import web3Utils from "../web3Utils";
 export default {
   data() {
     return {
-      net:'TEST',
+      net:'PROD',
       wallet_list: [],
       current_wallet: {},
       keyword: "",
@@ -77,6 +77,7 @@ export default {
         _this.net = net;
       },5);
     },
+    toRealAmount : web3Utils.toRealAmount,
     loadHistory(address) {
       let _this = this,
           requestUrl = `${web3Utils.getHttpBaseUrl(this.net)}&module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=asc`;
@@ -147,7 +148,7 @@ export default {
     border: 1px solid #999;
     border-left: 5px solid #ccc;
     background: rgb(90, 84, 110);
-    padding: 0 30px;
+    padding: 0 10px;
     &:nth-child(2n) {
       background: rgb(177, 156, 171);
     }
@@ -160,11 +161,11 @@ export default {
       flex-grow: 1;
       .transaction-title {
         display: inline-flex;
-        font-size: 20px;
+        font-size: 14px;
       }
       .transaction-sub {
         color: #eee;
-        font-size: 10px;
+        font-size: 12px;
         margin-top: 10px;
       }
     }

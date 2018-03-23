@@ -85,7 +85,7 @@
               <i class="icon iconfont icon-key"></i>
               <span v-text="wallet.address"></span>
                 <img src="../assets/copy.png" class="icon icon-address-copy"  @click="processTransaction(wallet)"/>
-                <span style="font-size: 12px;">Txn Count:{{wallet.nonce[0]}}</span>
+                <span style="font-size: 12px;">总交易数:{{wallet.nonce[0]}}</span>
               <p>
               <span class="token-wrapper" v-for="(token, index) in wallet.balances" v-bind:key="index">
                 <span>{{token.balance}} {{token.symbol}}</span>

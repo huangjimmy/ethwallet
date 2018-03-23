@@ -23,7 +23,7 @@ const httpTestBaseUrl = `http://ropsten.etherscan.io/api?apikey=${apiKey}`;
 
 function setWebProvider(ks){
   var web3Provider = new HookedWeb3Provider({
-    host: "http://47.254.24.199:8080",
+    host: "https://mainnet.infura.io/CsS9shwaAab0z7B4LP2d",
     transaction_signer: ks
   });
 
@@ -53,9 +53,18 @@ var padding = function (str, decimals) {
 }
 
 var toRealAmount = function (amount, decimals) {
+
+  if(amount == null || typeof(amount) == 'undefined'){
+      return amount;
+  }
   if(decimals){
     var a = padding(amount, decimals);
-    return a.slice(0, a.length - decimals) + "." + a.slice(a.length - decimals);
+    var ret = a.slice(0, a.length - decimals) + "." + a.slice(a.length - decimals);
+    if(ret.indexOf('.') == 0)ret = "0"+ret;
+    while(ret.length > 0 && ret.endsWith("0") && !ret.endsWith(".0")){
+        ret = ret.slice(0, ret.length-1);
+    }
+    return ret;
   }else{
     return amount/1.0e18;
   }

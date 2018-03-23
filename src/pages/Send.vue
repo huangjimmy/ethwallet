@@ -142,7 +142,7 @@ export default {
       let _this = this,
         //_token = _.find(this.current_wallet.balances, { value: _this.token_address });
         _token = this.current_wallet && this.current_wallet.balances?this.current_wallet.balances.filter(x=>{return x.address == _this.token_address;})[0]:undefined
-      return _token ? _token.balance : 99999999;
+      return _token && _token.balance ? _token.balance : 9999999999;
     },
     min: function() {
       return 0;
@@ -198,14 +198,25 @@ export default {
 
       _wallet.balances = [];
 
-      _token.balance = web3Utils.toRealAmount(
-        web3.eth.getBalance(_wallet.address)
-      );
+      try{
+          _token.balance = web3Utils.toRealAmount(
+              web3.eth.getBalance(_wallet.address)
+          );
+
+      }
+      catch(err){
+          _token.balance = null;
+      }
 
       _wallet.balances.push(_token);
 
       _.forEach(erc20tokens, token => {
-        let balance = token.contract.balanceOf("" + _wallet.address);
+        let balance = 0;
+        try {
+            balance = token.contract.balanceOf("" + _wallet.address);
+        }catch(err){
+            balance = null;
+        }
         _token = {
           address: token.address,
           symbol: token.symbol,

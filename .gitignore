@@ -1,4 +1,4 @@
-CPSWallet*
+outapp/*
 .DS_Store
 node_modules/
 dist/
