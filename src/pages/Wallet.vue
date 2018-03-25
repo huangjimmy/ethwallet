@@ -37,6 +37,19 @@
             <i-button class="button" @click="closeModal()">关闭</i-button>
         </div>
       </Modal>
+        <Modal v-model="modal.watch_wallet" width="360" :closable="false" :mask-closable="false">
+            <p slot="header" style="text-align:center">
+                <span>只读钱包</span>
+            </p>
+            <div style="text-align:center">
+                <span>您将只能查看余额，而无法向外转账</span>
+                <i-input v-model="readonly_address" placeholder="请输入钱包地址" style="width: 100%"></i-input>
+            </div>
+            <div slot="footer" style="text-align:center;">
+                <i-button class="button" @click="proceedStoreToAddress">确定</i-button>
+                <i-button class="button" @click="closeModal()">关闭</i-button>
+            </div>
+        </Modal>
       <Modal v-model="modal.password_restore" width="360" :closable="false" :mask-closable="false">
         <p slot="header" style="text-align:center">
             <span>恢复钱包</span>
@@ -64,7 +77,7 @@
         <p slot="header" style="text-align:center">
             <span>备份钱包</span>
         </p>
-        <div style="text-align:center">
+        <div style="text-align:cente">
             <i-input type="password" v-model="user_password" placeholder="请输入密码" style="width: 100%"></i-input>
         </div>
         <div slot="footer" style="text-align:center;">
@@ -73,8 +86,9 @@
         </div>
       </Modal>
       <i-button class="button" @click="openModal('restore_wallet')">恢复钱包</i-button>
+      <i-button class="button" @click="openModal('watch_wallet')">只读钱包</i-button>
       <!-- <i-button class="button">帮助</i-button> -->
-    </div>
+    </div>r
     <div class="filter-wrapper">
     </div>
     <div class="content-wrapper">
@@ -93,7 +107,7 @@
               </p>
             </h1>
           </div>
-          <button class="button" @click="proceedExport(wallet)">备份钱包(导出助记词)</button>
+          <button class="button" v-if="wallet && wallet.keystore" @click="proceedExport(wallet)">备份钱包(导出助记词)</button>
         </li>
       </ul>
     </div>
@@ -116,7 +130,8 @@ export default {
       user_entropy: "",
       user_password: "",
       wallet_list: [],
-      seed: ""
+      seed: "",
+      readonly_address:""
     };
   },
   mounted() {
@@ -231,16 +246,16 @@ export default {
                     })
                 }
                 else{
-                    if(token.contract == null || typeof(token.contract) == 'undefined'){
-                        let
-                            erc20tokens = web3Utils.getErc20Tokens(),
-                            erc20token = _.find(erc20tokens, {
-                                address: token.address
-                            });
-                        token.contract = erc20token.contract;
-                        token.decimals = erc20token.decimals;
-                    }
-                    token.contract && token.contract.balanceOf("" + _wallet.address, function (err, balance) {
+
+                    let
+                        erc20tokens = web3Utils.getErc20Tokens(),
+                        erc20token = _.find(erc20tokens, {
+                            address: token.address
+                        });
+                    var contract = erc20token.contract;
+                    token.decimals = erc20token.decimals;
+
+                    contract && contract.balanceOf("" + _wallet.address, function (err, balance) {
                         if(err){
                             reportUtils.report(e);
                             if(displayError)_this.$Message.error("获取余额失败");
@@ -295,7 +310,16 @@ export default {
               _token.balance = web3Utils.toRealAmount(result);
               _wallet.balances.push(_token);
 
-              _.forEach(erc20tokens, token => {
+              _.forEach(erc20tokens, (token, index) => {
+                  var _token = {
+                      address: token.address,
+                      symbol: token.symbol,
+                      decimals: token.decimals,
+                      balance: "...",
+                      //contract: token.contract
+                  };
+                  _wallet.balances.push(_token);
+
                   token.contract.balanceOf("" + _wallet.address, function (err, balance) {
                       if(err){
                           reportUtils.report(err);
@@ -303,17 +327,13 @@ export default {
                           return
                       }
 
-                      var _token = {
-                          address: token.address,
-                          symbol: token.symbol,
-                          balance: web3Utils.toRealAmount(
+                      var _token = _wallet.balances[index+1];
+                      _token.balance =web3Utils.toRealAmount(
                               balance,
                               token.decimals
-                          ),
-                          decimals: token.decimals,
-                          contract: token.contract
-                      };
-                      _wallet.balances.push(_token);
+                          );
+
+                      _wallet.balances[index+1] = _token;
                   });
               });
           });
@@ -333,6 +353,33 @@ export default {
         this.openModal("password_restore");
       }
     },
+      proceedStoreToAddress() {
+        var web3 = web3Utils.getWeb3();
+        var address = this.readonly_address;
+        try {
+            if(address.startsWith("0x") || address.startsWith("0X")){
+                address = address.slice(2);
+            }
+            var iban = web3.eth.iban.fromAddress(address);
+            var _this = this;
+
+            if (iban && web3.eth.iban.isValid(iban.toString())) {
+                _this.updateWallet(
+                    _this.getBalance({
+                        address: "0x"+address,
+                        keystore: null
+                    })
+                );
+                _this.loadWallet();
+                _this.closeModal();
+            }
+            else {
+                _this.$Message.error("错误的地址");
+            }
+        }catch(err){
+            _this.$Message.error("错误的地址");
+        }
+      },
     restoreWallet() {
       var _this = this,
         password = this.user_password,
@@ -355,6 +402,7 @@ export default {
             try {
               _this.newAddresses(password, ks);
               web3Utils.setWebProvider(ks);
+              setTimeout(_this.loadWallet, 1000);
             } catch (e) {
               reportUtils.report(e);
               _this.$Message.error("恢复失败");
@@ -377,12 +425,16 @@ export default {
         this.wallet_list[index] = wallet;
       } else {
         this.wallet_list.push(wallet);
-        dbUtils.set(
-          "address_list",
-          [dbUtils.get("address_list"), wallet.address].join(" ")
-        );
+        var addresses = dbUtils.get("address_list");
+
+        if(addresses.indexOf(wallet.address) < 0){
+            dbUtils.set(
+                "address_list",
+                [addresses, wallet.address].join(" ")
+            );
+        }
       }
-      dbUtils.set(wallet.address, wallet.keystore.serialize());
+      if(wallet.keystore)dbUtils.set(wallet.address, wallet.keystore.serialize());
       this.$root.globalData.wallet_list = this.wallet_list;
     },
     loadWallet() {
@@ -393,7 +445,7 @@ export default {
     },
     proceedExport(wallet) {
       this.openModal("password_export");
-      this.current_wallet = _.cloneDeep(wallet);
+      this.current_wallet = wallet;//_.cloneDeep(wallet);
     },
     exportWallet() {
       let _this = this,

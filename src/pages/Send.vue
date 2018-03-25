@@ -7,7 +7,7 @@
     <div class="content-wrapper">
       <div class="form-item">
         从:<i-select v-model="current_wallet.address" class="wallet-source round-corner-input" placeholder="选择钱包" @on-change="changeTransferWallet">
-            <Option v-for="item in wallet_list" :value="item.address" :key="item.address">{{ item.address }}</Option>
+            <Option v-for="item in wallet_list.filter(function(x){return x.keystore})" :value="item.address" :key="item.address">{{ item.address }}</Option>
         </i-select>
       </div>
         <div class="gap clearfix"></div>

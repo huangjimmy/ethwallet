@@ -7,9 +7,11 @@ let erc20tokens;
 
 const CPS_TEST_ADDR = "0x0E3E4BfD5a2572c1E0475029D43Ac0D274466017";
 const CPS_PROD_ADDR = "0xf239fAb41De78533FA974B74d7605f1E68F8772e";
+const CPST_PROD_ADDR = "0x978f6ee1D834704D0B9aFa4318d016Da4f9E6Ad6";
 
 const erc20addrs = [
     "0xf239fAb41De78533FA974B74d7605f1E68F8772e",
+    "0x978f6ee1D834704D0B9aFa4318d016Da4f9E6Ad6",
   //"0xFFAB690958a463EB859B6348279A2F5FDdB8Eba1",
   //"0x60B6a6420e6295eaa7dEa24eb780eC567205ee05",
 ];
@@ -22,10 +24,15 @@ const httpProdBaseUrl = `http://api.etherscan.io/api?apikey=${apiKey}`;
 const httpTestBaseUrl = `http://ropsten.etherscan.io/api?apikey=${apiKey}`;
 
 function setWebProvider(ks){
-  var web3Provider = new HookedWeb3Provider({
-    host: "https://mainnet.infura.io/CsS9shwaAab0z7B4LP2d",
+
+  var jsonRpcUrl = "https://mainnet.infura.io/CsS9shwaAab0z7B4LP2d";
+  var web3Provider = ks?
+      new HookedWeb3Provider({
+    host: jsonRpcUrl,
     transaction_signer: ks
-  });
+  }):
+      new Web3.providers.HttpProvider(jsonRpcUrl)
+  ;
 
   web3.setProvider(web3Provider);
 
@@ -36,8 +43,11 @@ function setWebProvider(ks){
       if(addr == CPS_TEST_ADDR){
           return {"address":addr, "contract": contract, "decimals": 8, "symbol": "CPSTest" };
       }
-      if(addr == CPS_PROD_ADDR){
+      else if(addr == CPS_PROD_ADDR){
           return {"address":addr, "contract": contract, "decimals": 8, "symbol": "CPS" };
+      }
+      else if(addr == CPST_PROD_ADDR){
+          return {"address":addr, "contract": contract, "decimals": 2, "symbol": "CPST" };
       }
     return {"address":addr, "contract": contract, "decimals": contract.decimals.call(), "symbol": contract.symbol.call() };
   })

@@ -42,9 +42,15 @@ const app = new Vue({
     _.each(address_list, function(address) {
       let serialized_keystore = dbUtils.get(address);
       if (serialized_keystore) {
+          var ks = null;
+          try{
+              ks = lightwallet.keystore.deserialize(dbUtils.get(address))
+          }catch(err){
+
+          }
         wallet = {
           address: address,
-          keystore: lightwallet.keystore.deserialize(dbUtils.get(address))
+          keystore: ks
         };
         _this.globalData.wallet_list.push(wallet);
       }

@@ -19,12 +19,12 @@
           <div class="transaction-wrapper">
             <h3 class="transaction-title" v-text="transaction.hash"></h3>
             <p class="transaction-sub">
-              <span v-text="transaction.from"></span> => <span v-text="transaction.to?transaction.to:'创建合约('+transaction.contractAddress+')'"></span>
+              <span v-text="transaction.from"></span> => <span v-text="transaction.to?transaction.realto:'创建合约('+transaction.contractAddress+')'"></span>
             </p>
           </div>
           <div class="transaction-token-wrapper">
-            <span class="token-amount" v-text="toRealAmount(transaction.value, 18)"></span>
-            <span class="token">ETH</span>
+            <span class="token-amount" v-text="transaction.amount"></span>
+            <span class="token">{{transaction.symbol}}</span>
           </div>
           <div class="transaction-time-wrapper">{{transaction.timeStamp | formatDate}}</div>
         </li>
@@ -36,6 +36,7 @@
 <script>
 import axios from "axios";
 import _ from 'lodash';
+import BigNumber from 'bignumber.js';
 import MainLayout from "../layouts/MainLayout.vue";
 import web3Utils from "../web3Utils";
 
@@ -86,7 +87,29 @@ export default {
       axios.get(requestUrl)
         .then(response => {
           _this.transaction_list = response.data.result;
-          _this.filter_list = response.data.result;
+          if(_this.transaction_list && _this.transaction_list.length > 0){
+              _this.transaction_list = _this.transaction_list.map(function (txn) {
+                  var tokens = web3Utils.getErc20Tokens();
+                  txn.symbol = 'ETH';
+                  txn.amount = _this.toRealAmount(txn.value, 18);
+                  txn.realto = txn.to;
+
+                  for(var token_index in tokens){
+                      var token = tokens[token_index];
+
+                      if(txn.to.toLowerCase() == token.address.toLowerCase() && txn.input && txn.input.length >= 10 && txn.input.substring(0, 10) == "0xa9059cbb"){
+                          txn.symbol = token.symbol;
+                          txn.contractAddress = token.address;
+                          txn.realto = "0x"+txn.input.substring(10+24,64+10);
+                          //0xa9059cbb000000000000000000000000a1dacb7d193259724c59a3e497e881089af2decd0000000000000000000000000000000000000000000000000000000005f5e100
+                          var amount = new BigNumber(txn.input.substring(74,74+64),16);
+                          txn.amount = _this.toRealAmount(amount, token.decimals);
+                      }
+                  }
+                  return txn;
+              });
+          }
+          _this.filter_list = _this.transaction_list;
           _this.$Loading.finish();
         })
         .catch(error => {
